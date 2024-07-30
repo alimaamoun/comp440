@@ -102,6 +102,7 @@ app.post('/login', (req, res) => {
         }
     });
 });
+
 //review page
 app.get('/review', (req, res) => {
     if (!req.session.username) {
@@ -119,7 +120,33 @@ app.post('/logout', (req, res) => {
         res.redirect('/');
     });
 });
+
+// Endpoint to handle form submission
+app.post('/submit-item', (req, res) => {
+    const { title, description, category, price } = req.body;
+    
+    // Print the received data (for debugging purposes)
+    console.log('Received data:', { title, description, category, price });
+
+    // Here, you would insert the data into your database
+    // For now, let's just send a success response
+    //res.status(200).send('Item inserted successfully');
+
+    const insertQuery = 'INSERT INTO items (title, description, category, price) VALUES (?, ?, ?, ?)';
+    db.query(insertQuery, [title, description, category, price], (err, results) => {
+        if (err) {
+            res.status(500).send('Error inserting an item' + err);
+            return;
+        } else {
+            res.send("item added to the database successfully");
+        }
+    
+    });
+});
+
 //start server
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
+
+

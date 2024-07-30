@@ -32,13 +32,51 @@
         <h2>insert an item</h2>
         <div class="item-form">
             <form id="itemForm">
-                    Title:          <input type="text" class="spaced-input">
-                    Description:    <input type="text" class="spaced-input">
-                    Category:       <input type="text" class="spaced-input">
-                    Price:          <input type="text" class="spaced-input">
+                    Title:          <input type="text" id="title" class="spaced-input">
+                    Description:    <input type="text" id="description"class="spaced-input">
+                    Category:       <input type="text" id="category" class="spaced-input">
+                    Price:          <input type="text" id="price" class="spaced-input">
                     <button type="submit">Submit</button>
             </form>
         </div>
     </div>
+
+    <script>
+        document.getElementById('itemForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            // Get the values from the input fields
+            var title = document.getElementById('title').value;
+            var description = document.getElementById('description').value;
+            var category = document.getElementById('category').value;
+            var price = document.getElementById('price').value;
+
+            // Prepare the data to be sent
+            var data = {
+                title: title,
+                description: description,
+                category: category,
+                price: price
+            };
+
+            // Send the data to the server
+            fetch('/submit-item', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.text())
+            .then(responseText => {
+                console.log(responseText);
+                // Add any logic to handle the response from the server
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+
 </body>
 </html>
