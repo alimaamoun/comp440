@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>440</title>
+    <style>
+        body {
+            background-color: green;
+            font-family: Arial, sans-serif;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        input[type="password"] { margin-bottom: 10px; }
+        input[type="text"] { margin-bottom: 10px;}
+        input[type="submit"] { margin-top: 10px;}
+        .header {
+            border: 2px solid blue;
+            text-align: center;
+            margin: 5px;
+            padding: 10px;
+            color: white;
+        }
+        h2 {text-decoration: underline;}
+        .form-container {
+            border: 5px solid yellow;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 400px;
+            border-radius: 5px;
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Register or Login for Bounty Store</h1>
+    </div>
+    <div class="form-container">
+        <h2>Register</h2>
+        <form method="post" action="/register">
+            <label for="reg_firstName">First Name:</label>
+            <input type="text" id="reg_firstName" name="reg_firstName" required><br>
+            <label for="reg_lastName">Last Name:</label>
+            <input type="text" id="reg_lastName" name="reg_lastName" required><br>
+            <label for="reg_email">Email:</label>
+            <input type="text" id="reg_email" name="reg_email" required><br>
+            <label for="reg_username">Username:</label>
+            <input type="text" id="reg_username" name="reg_username" required><br>
+            <label for="reg_password">Password:</label>
+            <input type="password" id="reg_password" name="reg_password" required><br>
+            <label for="reg_passwordCheck">Reenter Password:</label>
+            <input type="password" id="reg_passwordCheck" name="reg_passwordCheck" required><br>
+            <input type="submit" value="Register">
+        </form>
+    </div>
+    <div class="form-container">
+        <h2>Login</h2>
+        <form method="post" action="/login">
+            <label for="login_username">Username:</label>
+            <input type="text" id="login_username" name="login_username" required><br>
+            <label for="login_password">Password:</label>
+            <input type="password" id="login_password" name="login_password" required><br>
+            <input type="submit" value="Login">
+        </form>
+    </div>
+</body>
+</html>
