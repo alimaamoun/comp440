@@ -16,7 +16,7 @@ app.use(session({
     saveUninitialized: true
 }));
 
-//get html
+//get HTML
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -29,6 +29,7 @@ const db = mysql.createConnection({
     database: process.env.DB_NAME,
     port: process.env.DB_PORT
 });
+
 //check connection
 db.connect((err) => {
     if (err) {
@@ -37,9 +38,10 @@ db.connect((err) => {
     }
     console.log('Connected to the database');
 });
+
 app.post('/register', (req, res) => {
-    //check if passwords match
     const { reg_username, reg_password, reg_passwordCheck, reg_email, reg_firstName, reg_lastName } = req.body;
+    //check if passwords match
     if (reg_password !== reg_passwordCheck) {
         res.send("Passwords do not match. Please try again. <a href='/'>Back to register</a>");
         return;
@@ -54,7 +56,7 @@ app.post('/register', (req, res) => {
         if (results.length > 0) {
             res.send(`This username is taken, please try a new one. <a href='/'>Back to register</a>`);
         } else {
-            //check for duplicate email
+            // Check for duplicate email
             const selectEmailQuery = 'SELECT email FROM user WHERE email = ?';
             db.query(selectEmailQuery, [reg_email], (err, results) => {
                 if (err) {
@@ -96,19 +98,20 @@ app.post('/login', (req, res) => {
         if (results.length === 0 || results[0].password !== login_password) {
             res.send("Incorrect username or password. <a href='/'>Back to login</a>");
         } else {
-            //password is correct open the review page
+            // Password is correct, open the review page
             req.session.username = login_username;
             res.redirect('/review');
         }
     });
 });
-//review page
+
 app.get('/review', (req, res) => {
     if (!req.session.username) {
         return res.redirect('/');
     }
     res.sendFile(path.join(__dirname, 'review.html'));
 });
+
 app.post('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) {
@@ -122,29 +125,39 @@ app.post('/submit-item', (req, res) => {
     const { title, description, category, price } = req.body;
     const username = req.session.username;
 
+    // Validate required fields
+    if (!title || !description || !category || typeof price !== 'number') {
+        return res.status(400).send('Missing required fields or invalid price.');
+    }
+
     if (!username) {
         return res.status(401).send('You must be logged in to submit an item.');
     }
 
+    //check the number of items posted by the user today
     const countQuery = `
         SELECT COUNT(*) as itemCount 
         FROM items 
         WHERE username = ? AND date = CURDATE()`;
 
     db.query(countQuery, [username], (err, results) => {
-        //check the number of items posted by the user today
         if (err) {
             return res.status(500).send('Error checking item count: ' + err);
         }
+
         if (results[0].itemCount >= 2) {
             return res.status(403).send('You have already posted 2 items today. Please wait 24 hours to post again.');
         }
-        //if not over 2 at the new item
+
+        //if not over 2, add the new item
         const insertQuery = 'INSERT INTO items (username, title, description, category, price, date) VALUES (?, ?, ?, ?, ?, CURDATE())';
         db.query(insertQuery, [username, title, description, category, price], (err, results) => {
             if (err) {
                 return res.status(500).send('Error inserting item: ' + err);
             }
+
+            // Return the generated item ID
+            const itemId = results.insertId;
             res.send('Item added to the database successfully');
         });
     });
@@ -180,7 +193,7 @@ app.post('/searchItems', (req, res) => {
         results.forEach(item => {
             html += `
                 <tr>
-                    <td><input type="radio" name="item_id" value="${item.item_id}" required></td>
+                    <td><input type="radio" name="itemId" value="${item.id}" required></td>
                     <td>${item.title}</td>
                     <td>${item.description}</td>
                     <td>${item.category}</td>
@@ -197,74 +210,65 @@ app.post('/searchItems', (req, res) => {
 });
 
 app.post('/submit-review', (req, res) => {
-    const { item_id } = req.body;
-    const username = req.session.username;
-    if (!username) {
-        return res.status(401).send('You must be logged in to submit a review.');
+    console.log('Request Body:', req.body); // Inspect the request body
+    const itemId = req.body.itemId; // Get itemId 
+    console.log("itemId: ", itemId);
+    if (!req.session.username) {
+        return res.redirect('/');
     }
-
-    if (!item_id) {
-        return res.status(400).send('No item selected.');
-    }
-
-    const html = `
-        <h2>Submit Review</h2>
+    res.send(`
         <form action="/submit-review-process" method="POST">
-            <input type="hidden" name="item_id" value="${item_id}">
+            <input type="hidden" name="itemId" value="${itemId}">
             <label for="rating">Rating:</label>
-            <select name="rating" id="rating" required>
+            <select name="rating" required>
                 <option value="excellent">Excellent</option>
                 <option value="good">Good</option>
                 <option value="fair">Fair</option>
                 <option value="poor">Poor</option>
             </select>
             <br>
-            <label for="description">Description:</label>
-            <textarea name="description" id="description" required></textarea>
+            <label for="description">Review:</label>
+            <textarea name="description" required></textarea>
             <br>
             <button type="submit">Submit Review</button>
-        </form>`;
-
-    res.send(html);
+        </form>
+    `);
 });
 
 app.post('/submit-review-process', (req, res) => {
-    const { item_id, rating, description } = req.body;
-    const user_name = req.session.username;
+    const { itemId, rating, description } = req.body;
+    const username = req.session.username;
 
-    if (!user_name) {
+    if (!username) {
         return res.status(401).send('You must be logged in to submit a review.');
     }
 
-    if (!item_id || !rating || !description) {
-        return res.status(400).send('All fields are required.');
-    }
-
+    // Check the number of reviews posted by the user today
     const countQuery = `
         SELECT COUNT(*) as reviewCount 
         FROM reviews 
-        WHERE user_name = ? AND date = CURDATE()`;
+        WHERE username = ? AND date = CURDATE()`;
 
-    db.query(countQuery, [user_name], (err, results) => {
+    db.query(countQuery, [username], (err, results) => {
         if (err) {
             return res.status(500).send('Error checking review count: ' + err);
         }
 
         if (results[0].reviewCount >= 3) {
-            return res.status(403).send('You have already posted 3 reviews today. Please wait 24 hours to post again. <a href="/review">Back to review page</a>');
+            return res.status(403).send('You have already posted 3 reviews today. Please wait 24 hours to post again.');
         }
 
-        const insertQuery = 'INSERT INTO reviews (item_id, user_name, rating, description, date) VALUES (?, ?, ?, ?, CURDATE())';
-        db.query(insertQuery, [item_id, user_name, rating, description], (err, results) => {
+        // If not over 3, add the new review
+        const insertQuery = 'INSERT INTO reviews (itemId, username, rating, description, date) VALUES (?, ?, ?, ?, CURDATE())';
+        db.query(insertQuery, [itemId, username, rating, description], (err, results) => {
             if (err) {
                 return res.status(500).send('Error inserting review: ' + err);
             }
-            res.send('Review added to the database successfully. <a href="/review">Back to review page</a>');
+            res.send('Review added to the database successfully');
         });
     });
 });
 
-//start server
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
