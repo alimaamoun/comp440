@@ -197,7 +197,7 @@ app.post('/submit-review', (req, res) => {
     }
     const html = `
         <h2>Submit Review</h2>
-        <form action="/submit-review-process" method="POST">
+        <form action="/submit-review-checks" method="POST">
             <input type="hidden" name="item_id" value="${item_id}">
             <label for="rating">Rating:</label>
             <select name="rating" id="rating" required>
@@ -215,7 +215,7 @@ app.post('/submit-review', (req, res) => {
 
     res.send(html);
 });
-app.post('/submit-review-process', (req, res) => {
+app.post('/submit-review-checks', (req, res) => {
     const { item_id, rating, description } = req.body;
     const user_name = req.session.username;
 
@@ -226,30 +226,53 @@ app.post('/submit-review-process', (req, res) => {
     if (!item_id || !rating || !description) {
         return res.send('Please fill out all the fields.');
     }
-
-    const countQuery = `
-        SELECT COUNT(*) as reviewCount 
-        FROM reviews 
-        WHERE user_name = ? AND date = CURDATE()`;
-
-    db.query(countQuery, [user_name], (err, results) => {
+    //make sure user can not review their own item
+    const selectItemQuery = 'SELECT username FROM items WHERE item_id = ?';
+    db.query(selectItemQuery, [item_id], (err, results) => {
         if (err) {
-            return res.send('error checking review count: ' + err);
+            return res.send('error checking item owner: ' + err);
         }
-
-        if (results[0].reviewCount >= 3) {
-            return res.send('You have already posted 3 reviews today. Please wait 24 hours to post again. <a href="/review">Back to review page</a>');
+        if (results.length === 0) {
+            return res.send('error finding item id');
         }
-
-        const insertQuery = 'INSERT INTO reviews (item_id, user_name, rating, description, date) VALUES (?, ?, ?, ?, CURDATE())';
-        db.query(insertQuery, [item_id, user_name, rating, description], (err, results) => {
+        if (results[0].username === user_name) {
+            return res.send('You cannot review your own item. <a href="/review">Back to review page</a>');
+        }
+        //check if the user has already reviewed the item
+        const reviewCheckQuery = 'SELECT COUNT(*) as reviewCount FROM reviews WHERE user_name = ? AND item_id = ?';
+        db.query(reviewCheckQuery, [user_name, item_id], (err, results) => {
             if (err) {
                 return res.send('error inserting review: ' + err);
             }
-            res.send('Review added to the database successfully! <a href="/review">Back to review page</a>');
+            if (results[0].reviewCount > 0) {
+                return res.send('You have already reviewed this item. <a href="/review">Back to review page</a>');
+            }
+            //check if they reached the limit of reviews per day
+            const countQuery = `
+                SELECT COUNT(*) as reviewCount 
+                FROM reviews 
+                WHERE user_name = ? AND date = CURDATE()`;
+
+            db.query(countQuery, [user_name], (err, results) => {
+                if (err) {
+                    return res.send('error checking review count: ' + err);
+                }
+                if (results[0].reviewCount >= 3) {
+                    return res.send('You have already posted 3 reviews today. Please wait 24 hours to post again. <a href="/review">Back to review page</a>');
+                }
+                //insert review
+                const insertQuery = 'INSERT INTO reviews (item_id, user_name, rating, description, date) VALUES (?, ?, ?, ?, CURDATE())';
+                db.query(insertQuery, [item_id, user_name, rating, description], (err, results) => {
+                    if (err) {
+                        return res.send('error inserting review: ' + err);
+                    }
+                    res.send('Review added to the database successfully! <a href="/review">Back to review page</a>');
+                });
+            });
         });
     });
 });
+
 //start server
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
