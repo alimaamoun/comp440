@@ -16,12 +16,13 @@ app.use(session({
     saveUninitialized: true
 }));
 
-//get html
+//get HTML
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 //connect to database securely so I don't leak my password
+
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -29,6 +30,7 @@ const db = mysql.createConnection({
     database: process.env.DB_NAME,
     port: process.env.DB_PORT
 });
+
 //check connection
 db.connect((err) => {
     if (err) {
@@ -37,6 +39,7 @@ db.connect((err) => {
     }
     console.log('Connected to the database');
 });
+
 app.post('/register', (req, res) => {
     const { reg_username, reg_password, reg_passwordCheck, reg_email, reg_firstName, reg_lastName } = req.body;
     //check if passwords match
@@ -54,7 +57,7 @@ app.post('/register', (req, res) => {
         if (results.length > 0) {
             res.send(`This username is taken, please try a new one. <a href='/'>Back to register</a>`);
         } else {
-            //check for duplicate email
+            // Check for duplicate email
             const selectEmailQuery = 'SELECT email FROM user WHERE email = ?';
             db.query(selectEmailQuery, [reg_email], (err, results) => {
                 if (err) {
@@ -96,21 +99,19 @@ app.post('/login', (req, res) => {
         if (results.length === 0 || results[0].password !== login_password) {
             res.send("Incorrect username or password. <a href='/'>Back to login</a>");
         } else {
-            //password is correct open the review page
+            // Password is correct, open the review page
             req.session.username = login_username;
             res.redirect('/review');
         }
     });
 });
 
-//review page
 app.get('/review', (req, res) => {
     if (!req.session.username) {
         return res.redirect('/');
     }
-    res.sendFile(path.join('C:/Users/caili/COMP440_TeamNo_4', 'review.html'));
+    res.sendFile(path.join(__dirname, 'review.html'));
 });
-
 
 app.post('/logout', (req, res) => {
     req.session.destroy(err => {
@@ -121,29 +122,40 @@ app.post('/logout', (req, res) => {
     });
 });
 
-
 app.post('/submit-item', (req, res) => {
     const { title, description, category, price } = req.body;
-    
-    // Print the received data (for debugging purposes)
-    console.log('Received data:', { title, description, category, price });
+    const username = req.session.username;
 
-    // Here, you would insert the data into your database
-    // For now, let's just send a success response
-    //res.status(200).send('Item inserted successfully');
+    if (!username) {
+        return res.status(401).send('You must be logged in to submit an item.');
+    }
 
-    const insertQuery = 'INSERT INTO items (title, description, category, price) VALUES (?, ?, ?, ?)';
-    db.query(insertQuery, [title, description, category, price], (err, results) => {
+    //check the number of items posted by the user today
+    const countQuery = `
+        SELECT COUNT(*) as itemCount 
+        FROM items 
+        WHERE username = ? AND date = CURDATE()`;
+
+    db.query(countQuery, [username], (err, results) => {
         if (err) {
-            res.status(500).send('Error inserting an item' + err);
-            return;
-        } else {
-            res.send("item added to the database successfully");
+            return res.status(500).send('Error checking item count: ' + err);
         }
-    
+
+        if (results[0].itemCount >= 2) {
+            return res.status(403).send('You have already posted 2 items today. Please wait 24 hours to post again.');
+        }
+
+        //if not over 2 at the new item
+        const insertQuery = 'INSERT INTO items (username, title, description, category, price, date) VALUES (?, ?, ?, ?, ?, CURDATE())';
+        db.query(insertQuery, [username, title, description, category, price], (err, results) => {
+            if (err) {
+                return res.status(500).send('Error inserting item: ' + err);
+            }
+            res.send('Item added to the database successfully');
+        });
     });
 });
-//search items
+
 app.post('/searchItems', (req, res) => {
     const { category } = req.body;
 
@@ -160,7 +172,7 @@ app.post('/searchItems', (req, res) => {
             return res.send('No items found in this category.');
         }
 
-        let html = '<h2>Items Found:</h2><table border="1"><tr><th>Title</th><th>Description</th><th>Category</th><th>Price</th><th>Review</th></tr>';
+        let html = '<h2>Items Found:</h2><table border="1"><tr><th>Title</th><th>Description</th><th>Category</th><th>Price</th></tr>';
         results.forEach(item => {
             html += `<tr>
                         <td>${item.title}</td>
