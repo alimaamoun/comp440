@@ -38,17 +38,17 @@ db.connect((err) => {
     console.log('Connected to the database');
 });
 app.post('/register', (req, res) => {
-        //check if passwords match
+    //check if passwords match
     const { reg_username, reg_password, reg_passwordCheck, reg_email, reg_firstName, reg_lastName } = req.body;
     if (reg_password !== reg_passwordCheck) {
         res.send("Passwords do not match. Please try again. <a href='/'>Back to register</a>");
         return;
     }
-        //check for duplicate username
+    //check for duplicate username
     const selectUsernameQuery = 'SELECT username FROM user WHERE username = ?';
     db.query(selectUsernameQuery, [reg_username], (err, results) => {
         if (err) {
-            res.status(500).send('Error checking username: ' + err);
+            res.send('Error checking username: ' + err);
             return;
         }
         if (results.length > 0) {
@@ -58,7 +58,7 @@ app.post('/register', (req, res) => {
             const selectEmailQuery = 'SELECT email FROM user WHERE email = ?';
             db.query(selectEmailQuery, [reg_email], (err, results) => {
                 if (err) {
-                    res.status(500).send('Error checking email: ' + err);
+                    res.send('Error checking email: ' + err);
                     return;
                 }
                 if (results.length > 0) {
@@ -68,7 +68,7 @@ app.post('/register', (req, res) => {
                     const insertQuery = 'INSERT INTO user (username, password, email, firstName, lastName) VALUES (?, ?, ?, ?, ?)';
                     db.query(insertQuery, [reg_username, reg_password, reg_email, reg_firstName, reg_lastName], (err, results) => {
                         if (err) {
-                            res.status(500).send('Error inserting user: ' + err);
+                            res.send('Error inserting user: ' + err);
                             return;
                         }
                         res.send("New account added successfully! Login on main page. <a href='/'>Back to login</a>");
@@ -78,7 +78,6 @@ app.post('/register', (req, res) => {
         }
     });
 });
-
 app.post('/login', (req, res) => {
     const { login_username, login_password } = req.body;
     //make sure the fields are filled out
@@ -90,7 +89,7 @@ app.post('/login', (req, res) => {
     const selectQuery = 'SELECT password FROM user WHERE username = ?';
     db.query(selectQuery, [login_username], (err, results) => {
         if (err) {
-            res.status(500).send('Error checking username: ' + err);
+            res.send('error checking username: ' + err);
             return;
         }
         if (results.length === 0 || results[0].password !== login_password) {
@@ -112,60 +111,52 @@ app.get('/review', (req, res) => {
 app.post('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) {
-            return res.status(500).send('Error logging out: ' + err);
+            return res.send('error logging out: ' + err);
         }
         res.redirect('/');
     });
 });
-
 app.post('/submit-item', (req, res) => {
     const { title, description, category, price } = req.body;
     const username = req.session.username;
-
     if (!username) {
-        return res.status(401).send('You must be logged in to submit an item.');
+        return res.send('Please relog.');
     }
-
     const countQuery = `
         SELECT COUNT(*) as itemCount 
         FROM items 
         WHERE username = ? AND date = CURDATE()`;
-
     db.query(countQuery, [username], (err, results) => {
         if (err) {
-            return res.status(500).send('Error checking item count: ' + err);
+            return res.send('error checking item count: ' + err);
         }
 
         if (results[0].itemCount >= 2) {
-            return res.status(403).send('You have already posted 2 items today. Please wait 24 hours to post again.');
+            return res.send('You have already posted 2 items today. Please wait 24 hours to post again.');
         }
-
         const insertQuery = 'INSERT INTO items (username, title, description, category, price, date) VALUES (?, ?, ?, ?, ?, CURDATE())';
         db.query(insertQuery, [username, title, description, category, price], (err, results) => {
             if (err) {
-                return res.status(500).send('Error inserting item: ' + err);
+                return res.send('error inserting item: ' + err);
             }
-            res.send('Item added to the database successfully');
+            res.send('Item added to the database successfully!');
         });
     });
 });
-
 app.post('/searchItems', (req, res) => {
     const { category } = req.body;
 
     if (!category) {
-        return res.status(400).send('Category is required');
+        return res.send('Please pick a category');
     }
-
     const searchQuery = 'SELECT * FROM items WHERE category = ?';
     db.query(searchQuery, [category], (err, results) => {
         if (err) {
-            return res.status(500).send('Error searching items: ' + err);
+            return res.send('error searching items: ' + err);
         }
         if (results.length === 0) {
             return res.send('No items found in this category.');
         }
-
         let html = `
             <h2>Items Found:</h2>
             <form action="/submit-review" method="POST">
@@ -195,18 +186,15 @@ app.post('/searchItems', (req, res) => {
         res.send(html);
     });
 });
-
 app.post('/submit-review', (req, res) => {
     const { item_id } = req.body;
     const username = req.session.username;
     if (!username) {
-        return res.status(401).send('You must be logged in to submit a review.');
+        return res.send('Please relog.');
     }
-
     if (!item_id) {
-        return res.status(400).send('No item selected.');
+        return res.send('Please select an item to review.');
     }
-
     const html = `
         <h2>Submit Review</h2>
         <form action="/submit-review-process" method="POST">
@@ -227,17 +215,16 @@ app.post('/submit-review', (req, res) => {
 
     res.send(html);
 });
-
 app.post('/submit-review-process', (req, res) => {
     const { item_id, rating, description } = req.body;
     const user_name = req.session.username;
 
     if (!user_name) {
-        return res.status(401).send('You must be logged in to submit a review.');
+        return res.send('Please relog.');
     }
 
     if (!item_id || !rating || !description) {
-        return res.status(400).send('All fields are required.');
+        return res.send('Please fill out all the fields.');
     }
 
     const countQuery = `
@@ -247,23 +234,22 @@ app.post('/submit-review-process', (req, res) => {
 
     db.query(countQuery, [user_name], (err, results) => {
         if (err) {
-            return res.status(500).send('Error checking review count: ' + err);
+            return res.send('error checking review count: ' + err);
         }
 
         if (results[0].reviewCount >= 3) {
-            return res.status(403).send('You have already posted 3 reviews today. Please wait 24 hours to post again. <a href="/review">Back to review page</a>');
+            return res.send('You have already posted 3 reviews today. Please wait 24 hours to post again. <a href="/review">Back to review page</a>');
         }
 
         const insertQuery = 'INSERT INTO reviews (item_id, user_name, rating, description, date) VALUES (?, ?, ?, ?, CURDATE())';
         db.query(insertQuery, [item_id, user_name, rating, description], (err, results) => {
             if (err) {
-                return res.status(500).send('Error inserting review: ' + err);
+                return res.send('error inserting review: ' + err);
             }
-            res.send('Review added to the database successfully. <a href="/review">Back to review page</a>');
+            res.send('Review added to the database successfully! <a href="/review">Back to review page</a>');
         });
     });
 });
-
 //start server
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
