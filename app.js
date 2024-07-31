@@ -125,6 +125,11 @@ app.post('/submit-item', (req, res) => {
     const { title, description, category, price } = req.body;
     const username = req.session.username;
 
+    // Validate required fields
+    if (!title || !description || !category || typeof price !== 'number') {
+        return res.status(400).send('Missing required fields or invalid price.');
+    }
+
     if (!username) {
         return res.status(401).send('You must be logged in to submit an item.');
     }
@@ -144,12 +149,15 @@ app.post('/submit-item', (req, res) => {
             return res.status(403).send('You have already posted 2 items today. Please wait 24 hours to post again.');
         }
 
-        //if not over 2 at the new item
+        //if not over 2, add the new item
         const insertQuery = 'INSERT INTO items (username, title, description, category, price, date) VALUES (?, ?, ?, ?, ?, CURDATE())';
         db.query(insertQuery, [username, title, description, category, price], (err, results) => {
             if (err) {
                 return res.status(500).send('Error inserting item: ' + err);
             }
+
+            // Return the generated item ID
+            const itemId = results.insertId;
             res.send('Item added to the database successfully');
         });
     });
@@ -202,7 +210,9 @@ app.post('/searchItems', (req, res) => {
 });
 
 app.post('/submit-review', (req, res) => {
-    const { itemId } = req.body;
+    console.log('Request Body:', req.body); // Inspect the request body
+    const itemId = req.body.itemId; // Get itemId 
+    console.log("itemId: ", itemId);
     if (!req.session.username) {
         return res.redirect('/');
     }
