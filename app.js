@@ -22,7 +22,6 @@ app.get('/', (req, res) => {
 });
 
 //connect to database securely so I don't leak my password
-
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -172,18 +171,91 @@ app.post('/searchItems', (req, res) => {
             return res.send('No items found in this category.');
         }
 
-        let html = '<h2>Items Found:</h2><table border="1"><tr><th>Title</th><th>Description</th><th>Category</th><th>Price</th></tr>';
+        let html = `
+            <h2>Items Found:</h2>
+            <form action="/submit-review" method="POST">
+                <table border="1">
+                    <tr>
+                        <th>Select</th>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                    </tr>`;
         results.forEach(item => {
-            html += `<tr>
-                        <td>${item.title}</td>
-                        <td>${item.description}</td>
-                        <td>${item.category}</td>
-                        <td>${item.price}</td>
-                     </tr>`;
+            html += `
+                <tr>
+                    <td><input type="radio" name="itemId" value="${item.id}" required></td>
+                    <td>${item.title}</td>
+                    <td>${item.description}</td>
+                    <td>${item.category}</td>
+                    <td>${item.price}</td>
+                </tr>`;
         });
-        html += '</table>';
+        html += `
+                </table>
+                <button type="submit">Review</button>
+            </form>`;
 
         res.send(html);
+    });
+});
+
+app.post('/submit-review', (req, res) => {
+    const { itemId } = req.body;
+    if (!req.session.username) {
+        return res.redirect('/');
+    }
+    res.send(`
+        <form action="/submit-review-process" method="POST">
+            <input type="hidden" name="itemId" value="${itemId}">
+            <label for="rating">Rating:</label>
+            <select name="rating" required>
+                <option value="excellent">Excellent</option>
+                <option value="good">Good</option>
+                <option value="fair">Fair</option>
+                <option value="poor">Poor</option>
+            </select>
+            <br>
+            <label for="description">Review:</label>
+            <textarea name="description" required></textarea>
+            <br>
+            <button type="submit">Submit Review</button>
+        </form>
+    `);
+});
+
+app.post('/submit-review-process', (req, res) => {
+    const { itemId, rating, description } = req.body;
+    const username = req.session.username;
+
+    if (!username) {
+        return res.status(401).send('You must be logged in to submit a review.');
+    }
+
+    // Check the number of reviews posted by the user today
+    const countQuery = `
+        SELECT COUNT(*) as reviewCount 
+        FROM reviews 
+        WHERE username = ? AND date = CURDATE()`;
+
+    db.query(countQuery, [username], (err, results) => {
+        if (err) {
+            return res.status(500).send('Error checking review count: ' + err);
+        }
+
+        if (results[0].reviewCount >= 3) {
+            return res.status(403).send('You have already posted 3 reviews today. Please wait 24 hours to post again.');
+        }
+
+        // If not over 3, add the new review
+        const insertQuery = 'INSERT INTO reviews (itemId, username, rating, description, date) VALUES (?, ?, ?, ?, CURDATE())';
+        db.query(insertQuery, [itemId, username, rating, description], (err, results) => {
+            if (err) {
+                return res.status(500).send('Error inserting review: ' + err);
+            }
+            res.send('Review added to the database successfully');
+        });
     });
 });
 
