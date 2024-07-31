@@ -3,22 +3,62 @@
 <head>
     <title>Review Page</title>
     <style>
-        label { display: block; margin-top: 10px; margin-bottom: 10px; }
-        input[type="password"] { margin-bottom: 10px; }
-        input[type="submit"] { margin-top: 10px; }
-        .header { text-align: center; margin: 5px; }
-        h2 { text-decoration: underline; }
-        .box { border: 2px solid red; text-align: center; margin: 5px; }
-        .underline { text-decoration: underline; }
-
-        .spaced-input{
-            display: block;
-            margin-bottom: 10px;
-            padding: 10px;
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
         }
-        /* .list-item{
-            
-        } */
+        .header {
+            text-align: center;
+            width: 100%;
+            margin: 5px;
+        }
+        .header h1 {
+            margin: 0;
+        }
+        .header form {
+            display: inline;
+        }
+        .search-box, .add-item-box {
+            border: 2px solid blue;
+            text-align: center;
+            margin: 10px;
+            padding: 20px;
+            width: 300px;
+        }
+        .content {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            width: 100%;
+        }
+        .box {
+            border: 2px solid blue;
+            text-align: center;
+            margin: 10px;
+            padding: 20px;
+            width: 300px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        input[type="text"], input[type="number"], textarea {
+            width: 90%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+        input[type="submit"] {
+            margin-top: 10px;
+            padding: 5px 10px;
+        }
+        h2 {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -28,55 +68,78 @@
             <input type="submit" name="logout" value="Logout">
         </form>
     </div>
-    <div class="item-insert">
-        <h2>insert an item</h2>
-        <div class="item-form">
-            <form id="itemForm">
-                    Title:          <input type="text" id="title" class="spaced-input">
-                    Description:    <input type="text" id="description"class="spaced-input">
-                    Category:       <input type="text" id="category" class="spaced-input">
-                    Price:          <input type="text" id="price" class="spaced-input">
-                    <button type="submit">Submit</button>
+
+    <div class="content">
+        <div class="search-box">
+            <h2>Search Items</h2>
+            <form id="searchForm">
+                <label for="category-search">Category:</label>
+                <input type="text" id="category-search" name="category" required>
+                <input type="submit" value="Search">
             </form>
+            <div id="searchResults"></div>
+        </div>
+
+        <div class="add-item-box">
+            <h2>Insert Item</h2>
+            <form id="itemForm">
+                <label for="title">Title:</label>
+                <input type="text" id="title" name="title" required>
+                
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" required></textarea>
+                
+                <label for="category">Category:</label>
+                <input type="text" id="category" name="category" required>
+                
+                <label for="price">Price:</label>
+                <input type="number" id="price" name="price" required>
+                
+                <input type="submit" value="Add Item">
+            </form>
+            <div id="submitMessage"></div>
         </div>
     </div>
 
     <script>
+        document.getElementById('searchForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const category = document.getElementById('category-search').value;
+            
+            fetch('/searchItems', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ category: category })
+            })
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('searchResults').innerHTML = data;
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
         document.getElementById('itemForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent the default form submission
-
-            // Get the values from the input fields
-            var title = document.getElementById('title').value;
-            var description = document.getElementById('description').value;
-            var category = document.getElementById('category').value;
-            var price = document.getElementById('price').value;
-
-            // Prepare the data to be sent
-            var data = {
-                title: title,
-                description: description,
-                category: category,
-                price: price
-            };
-
-            // Send the data to the server
+            event.preventDefault();
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            const category = document.getElementById('category').value;
+            const price = document.getElementById('price').value;
+            
             fetch('/submit-item', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify({ title: title, description: description, category: category, price: price })
             })
             .then(response => response.text())
-            .then(responseText => {
-                console.log(responseText);
-                // Add any logic to handle the response from the server
+            .then(data => {
+                document.getElementById('submitMessage').innerHTML = data;
             })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+            .catch(error => console.error('Error:', error));
         });
     </script>
-
 </body>
 </html>

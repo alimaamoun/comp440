@@ -106,22 +106,22 @@ app.post('/login', (req, res) => {
 //review page
 app.get('/review', (req, res) => {
     if (!req.session.username) {
-        res.redirect('/');
-        return;
+        return res.redirect('/');
     }
-    res.sendFile(path.join(__dirname, 'review.html'));
+    res.sendFile(path.join('C:/Users/caili/COMP440_TeamNo_4', 'review.html'));
 });
+
+
 app.post('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) {
-            res.status(500).send('Error logging out: ' + err);
-            return;
+            return res.status(500).send('Error logging out: ' + err);
         }
         res.redirect('/');
     });
 });
 
-// Endpoint to handle form submission
+
 app.post('/submit-item', (req, res) => {
     const { title, description, category, price } = req.body;
     
@@ -143,10 +143,38 @@ app.post('/submit-item', (req, res) => {
     
     });
 });
+//search items
+app.post('/searchItems', (req, res) => {
+    const { category } = req.body;
 
-//start server
+    if (!category) {
+        return res.status(400).send('Category is required');
+    }
+
+    const searchQuery = 'SELECT * FROM items WHERE category = ?';
+    db.query(searchQuery, [category], (err, results) => {
+        if (err) {
+            return res.status(500).send('Error searching items: ' + err);
+        }
+        if (results.length === 0) {
+            return res.send('No items found in this category.');
+        }
+
+        let html = '<h2>Items Found:</h2><table border="1"><tr><th>Title</th><th>Description</th><th>Category</th><th>Price</th><th>Review</th></tr>';
+        results.forEach(item => {
+            html += `<tr>
+                        <td>${item.title}</td>
+                        <td>${item.description}</td>
+                        <td>${item.category}</td>
+                        <td>${item.price}</td>
+                     </tr>`;
+        });
+        html += '</table>';
+
+        res.send(html);
+    });
+});
+
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
-
-
