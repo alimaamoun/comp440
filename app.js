@@ -197,7 +197,7 @@ app.post('/submit-review', (req, res) => {
     }
     const html = `
         <h2>Submit Review</h2>
-        <form action="/submit-review-process" method="POST">
+        <form action="/submit-review-checks" method="POST">
             <input type="hidden" name="item_id" value="${item_id}">
             <label for="rating">Rating:</label>
             <select name="rating" id="rating" required>
@@ -215,7 +215,7 @@ app.post('/submit-review', (req, res) => {
 
     res.send(html);
 });
-app.post('/submit-review-process', (req, res) => {
+app.post('/submit-review-checks', (req, res) => {
     const { item_id, rating, description } = req.body;
     const user_name = req.session.username;
 
