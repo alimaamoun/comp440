@@ -1,0 +1,51 @@
+1)
+const query = `
+        SELECT i.category, i.title, i.price
+	FROM items i
+	JOIN (
+    		SELECT category, MAX(price) AS max_price
+    		FROM items
+    		GROUP BY category
+	) max_items
+	ON i.category = max_items.category AND i.price = max_items.max_price;
+    `;
+
+2)
+const query = `
+        SELECT username
+	FROM items
+	GROUP BY username, date
+	HAVING COUNT(item_id) >= 2;
+    `;
+
+3)
+SELECT i.item_id, i.title, i.description, i.category, i.price, i.date
+FROM items i
+WHERE i.username = 'username here'  
+AND NOT EXISTS (
+    SELECT 1
+    FROM reviews r
+    WHERE r.item_id = i.item_id
+    AND r.description NOT IN ('Excellent', 'Good')
+);
+
+4)
+SELECT username
+FROM items
+WHERE date = '2024-07-04'
+GROUP BY username
+HAVING COUNT(item_id) = (
+    SELECT MAX(item_count)
+    FROM (
+        SELECT username, COUNT(item_id) AS item_count
+        FROM items
+        WHERE date = '2024-07-04'
+        GROUP BY username
+    ) AS item_counts
+);
+
+5)
+
+
+6)
+
