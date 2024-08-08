@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sorted Information</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        .header {
+            text-align: center;
+            width: 100%;
+            margin: 5px;
+        }
+        .header h1 {
+            margin: 0;
+        }
+        .header form {
+            display: inline;
+        }
+        .form-box {
+            border: 2px solid blue;
+            text-align: center;
+            margin: 10px;
+            padding: 20px;
+            width: 300px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        input[type="text"], input[type="number"] {
+            width: 90%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+        input[type="submit"] {
+            margin-top: 10px;
+            padding: 5px 10px;
+        }
+        h2 {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Sorted Information</h1>
+        <form method="post" action="/logout">
+            <input type="submit" name="logout" value="Logout">
+        </form>
+    </div>
+
+    <div class="form-box">
+        <h2>Most Expensive Items by Category</h2>
+        <form id="mostExpensiveForm">
+            <input type="submit" value="Get Most Expensive Items">
+        </form>
+    </div>
+
+    <div class="form-box">
+        <h2>Users with Items in Two Categories on Same Day</h2>
+        <form id="twoCategoriesForm">
+            <label for="category1">Category 1:</label>
+            <input type="text" id="category1" name="category1" required>
+            <label for="category2">Category 2:</label>
+            <input type="text" id="category2" name="category2" required>
+            <input type="submit" value="Search Users">
+        </form>
+    </div>
+
+    <div class="form-box">
+        <h2>Items with Excellent or Good Comments</h2>
+        <form id="excellentGoodForm">
+            <label for="user">User X:</label>
+            <input type="text" id="user" name="user" required>
+            <input type="submit" value="Search Items">
+        </form>
+    </div>
+
+    <div class="form-box">
+        <h2>Users with Most Items on 7/4/2024</h2>
+        <form id="mostItemsForm">
+            <input type="submit" value="Get Users">
+        </form>
+    </div>
+
+    <div class="form-box">
+        <h2>Users with All Poor Reviews</h2>
+        <form id="allPoorReviewsForm">
+            <input type="submit" value="Get Users">
+        </form>
+    </div>
+
+    <div class="form-box">
+        <h2>Users with No Poor Reviews</h2>
+        <form id="noPoorReviewsForm">
+            <input type="submit" value="Get Users">
+        </form>
+    </div>
+
+    <script>
+       
+    </script>
+</body>
+</html>

@@ -272,7 +272,9 @@ app.post('/submit-review-checks', (req, res) => {
         });
     });
 });
-
+app.get('/sortedInformation', (req, res) => {
+    res.sendFile(path.join(__dirname, 'sortedInformation.html'));
+});
 //start server
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
