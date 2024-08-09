@@ -411,6 +411,13 @@ app.get('/users-with-bad-items', (req, res) => {
 
 //users with good items #6
 app.get('/users-with-good-items', (req, res) => {
+
+    const username = req.session.username;
+
+    if (!username) {
+        return res.status(403).send('Please relog.');
+    }
+
     const query = `
         SELECT DISTINCT i.username
         FROM items i
@@ -430,19 +437,12 @@ app.get('/users-with-good-items', (req, res) => {
 
         // Output the results for debugging
         console.log('Query 6 results:', results);
-
-        let html = '<h2>Users with No Poor Reviews:</h2>';
+        
         if (results.length === 0) {
-            html += '<p>No users found with items that never received a poor review.</p>';
-        } else {
-            html += '<ul>';
-            results.forEach(user => {
-                html += `<li>${user.username}</li>`;
-            });
-            html += '</ul>';
+            return res.status(404).json({ message: 'No user found' });
         }
 
-        res.send(html);
+        res.json(results);
     });
 });
 

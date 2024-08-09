@@ -132,6 +132,7 @@
                 <form id="noPoorItemsForm">
                     <input type="submit" value="Get Users">
                 </form>
+                <div id="noPoorItemsResults"></div>
             </div>
         </div>
         <div class="column">
@@ -351,7 +352,7 @@ document.getElementById('mostItemsForm').addEventListener('submit', function(eve
             return response.json(); // Parse JSON if response is OK
         })
         .then(data => {
-            let resultsDiv = document.getElementById('nopoorItemsResults');
+            let resultsDiv = document.getElementById('noPoorItemsResults');
             resultsDiv.innerHTML = '';
 
             // Check if data is an array
@@ -365,7 +366,7 @@ document.getElementById('mostItemsForm').addEventListener('submit', function(eve
         })
         .catch(error => {
             console.error('Error fetching users-with-good-items:', error);
-            let resultsDiv = document.getElementById('nopoorItemsResults');
+            let resultsDiv = document.getElementById('noPoorItemsResults');
             resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
         });
     });
