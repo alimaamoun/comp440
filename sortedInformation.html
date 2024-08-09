@@ -119,6 +119,7 @@
                 <form id="noPoorReviewsForm">
                     <input type="submit" value="Get Users">
                 </form>
+                <div id="noPoorReviewersResults"></div>
             </div>
             <div class="form-box">
                 <h2>Users with Bad Items</h2>
@@ -301,38 +302,39 @@ document.getElementById('mostItemsForm').addEventListener('submit', function(eve
     document.getElementById('noPoorReviewsForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
-    fetch('/never-poor-reviewers') // Ensure the correct endpoint is used
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json(); // Parse JSON if response is OK
-        })
-        .then(data => {
-            console.log('Data received:', data); // Check the structure of the data
-            let resultsDiv = document.getElementById('nopoorReviewersResults');
-            resultsDiv.innerHTML = '';
+        fetch('/never-poor-reviewers') // Ensure the correct endpoint is used
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json(); // Parse JSON if response is OK
+            })
+            .then(data => {
+                console.log('Data received:', data); 
+                let resultsDiv = document.getElementById('noPoorReviewersResults');
+                resultsDiv.innerHTML = '';
 
-            // Ensure data is an array and has the correct structure
-            if (Array.isArray(data)) {
-                data.forEach(user => {
-                    console.log('User object:', user); // Debug each user object
-                    if (user.username) { // Check if user_name exists
-                        resultsDiv.innerHTML += `<p>User: ${user.username}</p>`;
-                    } else {
-                        resultsDiv.innerHTML += '<p>Unexpected data format: username missing.</p>';
-                    }
-                });
-            } else {
-                resultsDiv.innerHTML = '<p>Data is not an array. Please try again later.</p>';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching never-poor reviewers:', error);
-            let resultsDiv = document.getElementById('nopoorReviewersResults');
-            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
-        });
-});
+                // Ensure data is an array and has the correct structure
+                if (Array.isArray(data)) {
+                    data.forEach(user => {
+                        console.log('User object:', user); // Debug each user object
+                        if (user.username) { // Check if user_name exists
+                            resultsDiv.innerHTML += `<p>User: ${user.username}</p>`;
+                        } else {
+                            resultsDiv.innerHTML += '<p>Unexpected data format: user_name missing.</p>';
+                        }
+                    });
+                } else {
+                    resultsDiv.innerHTML = '<p>Data is not an array. Please try again later.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching never-poor reviewers:', error);
+                let resultsDiv = document.getElementById('noPoorReviewersResults');
+                resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
+            });
+    });
+
 
 
     //#6
