@@ -29,6 +29,7 @@ const db = mysql.createConnection({
     database: process.env.DB_NAME,
     port: process.env.DB_PORT
 });
+
 //check connection
 db.connect((err) => {
     if (err) {
@@ -275,20 +276,94 @@ app.post('/submit-review-checks', (req, res) => {
 app.get('/sortedInformation', (req, res) => {
     res.sendFile(path.join(__dirname, 'sortedInformation.html'));
 });
+
 //most expensive #1
-app.get('/most-expensive-items', (req, res) => {
-//add code
+app.post('/getMostExpensiveItems', (req, res) => {
+    const query = `
+        SELECT i.category, i.title, i.price
+        FROM items i
+        JOIN (
+            SELECT category, MAX(price) AS max_price
+            FROM items
+            GROUP BY category
+        ) max_items
+        ON i.category = max_items.category AND i.price = max_items.max_price;
+    `;
+    db.query(query, (error, results) => {
+        if (error) {
+            console.error('Error fetching most expensive items:', error);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'No items found' });
+        }
+        res.json(results);
+    });
 });
 
+
 //most items on 7/4/2024 #4
-app.get('/most-items-on-7-4-2024', (req, res) => {
-//add code
+app.post('/most-items-on-7-4-2024', (req, res) => {
+    const query = `
+        SELECT username
+        FROM items
+        WHERE date = '2024-07-04'
+        GROUP BY username
+        HAVING COUNT(item_id) >= 2;
+    `;
+
+    db.query(query, (error, results) => {
+        if (error) {
+            console.error('Error fetching most items on 7/4/2024:', error);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'No users found who posted 2 or more items on 7/4/2024' });
+        }
+
+        res.json(results);
+    });
 });
+
 
 //poor reviewers #5
 app.get('/poor-reviewers', (req, res) => {
-//add code
+    const username = req.session.username;
+
+    if (!username) {
+        return res.status(403).send('Please relog.');
+    }
+
+    const query = `
+        SELECT DISTINCT i.username
+        FROM items i
+        WHERE i.username = ?  
+        AND NOT EXISTS (
+            SELECT 1
+            FROM reviews r
+            WHERE r.item_id = i.item_id
+            AND r.rating IN ('Excellent', 'Good')
+        );
+    `;
+
+    db.query(query, [username], (error, results) => {
+        if (error) {
+            console.error('Error fetching poor reviewers:', error);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+
+        // Output the results for debugging
+        console.log('Query results:', results);
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'No poor reviewers found.' });
+        }
+
+        res.json(results);
+    });
 });
+
 
 //never poor reviewers #2 on new requirements
 app.get('/never-poor-reviewers', (req, res) => {

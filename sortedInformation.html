@@ -75,6 +75,7 @@
                 <form id="mostExpensiveForm">
                     <input type="submit" value="Get Most Expensive Items">
                 </form>
+                <div id="mostExpensiveResults"></div>
             </div>
 
             <div class="form-box">
@@ -82,6 +83,7 @@
                 <form id="mostItemsForm">
                     <input type="submit" value="Get Users">
                 </form>
+                <div id="mostItemsResults"></div>
             </div>
 
             <div class="form-box">
@@ -89,6 +91,7 @@
                 <form id="allPoorReviewsForm">
                     <input type="submit" value="Get Users">
                 </form>
+                <div id="poorReviewersResults"></div>
             </div>
 
             <div class="form-box">
@@ -148,6 +151,106 @@
             
         </div>
     </div>
+
+    <script>
+        document.getElementById('mostExpensiveForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+        fetch('/getMostExpensiveItems', {
+            method: 'POST',
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json(); // Try to parse as JSON only if response is OK
+        })
+        .then(data => {
+            let resultsDiv = document.getElementById('mostExpensiveResults');
+            resultsDiv.innerHTML = '';
+            data.forEach(item => {
+                resultsDiv.innerHTML += `<p>Category: ${item.category}, Title: ${item.title}, Price: ${item.price}</p>`;
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching most expensive items:', error);
+            let resultsDiv = document.getElementById('mostExpensiveResults');
+            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
+        });
+    });
+
+    document.getElementById('mostItemsForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+        fetch('/most-items-on-7-4-2024', {
+            method: 'POST', // Changed to POST
+            headers: {
+                'Content-Type': 'application/json' // Set headers if needed
+            },
+            body: JSON.stringify({}) // Empty body or add data if needed
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json(); // Parse JSON if response is OK
+        })
+        .then(data => {
+            let resultsDiv = document.getElementById('mostItemsResults');
+            resultsDiv.innerHTML = '';
+
+            // Check if data is an array
+            if (Array.isArray(data)) {
+                data.forEach(user => {
+                    // Assuming the server returns an array of objects with a 'username' field
+                    resultsDiv.innerHTML += `<p>User: ${user.username}</p>`;
+                });
+            } else {
+                resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching users with most items on 7/4/2024:', error);
+            let resultsDiv = document.getElementById('mostItemsResults');
+            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
+        });
+    });
+
+    document.getElementById('allPoorReviewsForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+        fetch('/poor-reviewers', {
+            method: 'GET',
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json(); // Parse JSON if response is OK
+        })
+        .then(data => {
+            let resultsDiv = document.getElementById('poorReviewersResults');
+            resultsDiv.innerHTML = '';
+
+            // Check if data is an array
+            if (Array.isArray(data)) {
+                data.forEach(user => {
+                    // Ensure the server returns an object with 'username'
+                    resultsDiv.innerHTML += `<p>User: ${user.username}</p>`;
+                });
+            } else {
+                resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching poor reviewers:', error);
+            let resultsDiv = document.getElementById('poorReviewersResults');
+            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
+        });
+    });
+
+        
+    </script>
     <div class="footer">
         <a href="/review">Go Back to Review Page</a>
     </div>
