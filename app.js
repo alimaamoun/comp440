@@ -275,6 +275,54 @@ app.post('/submit-review-checks', (req, res) => {
 app.get('/sortedInformation', (req, res) => {
     res.sendFile(path.join(__dirname, 'sortedInformation.html'));
 });
+//most expensive #1
+app.get('/most-expensive-items', (req, res) => {
+//add code
+});
+
+//most items on 7/4/2024 #4
+app.get('/most-items-on-7-4-2024', (req, res) => {
+//add code
+});
+
+//poor reviewers #5
+app.get('/poor-reviewers', (req, res) => {
+//add code
+});
+
+//never poor reviewers #2 on new requirements
+app.get('/never-poor-reviewers', (req, res) => {
+//add code
+});
+
+//users with bad items #3 on new requirements 
+app.get('/users-with-bad-items', (req, res) => {
+//add code
+});
+
+//users with good items #6
+app.get('/users-with-good-items', (req, res) => {
+//add code
+});
+
+//two categories on same day #2
+app.post('/users-with-items-in-two-categories', (req, res) => {
+    const { category1, category2 } = req.body;
+//add code
+});
+
+//items with excellent or good reviews #3
+app.post('/items-with-excellent-or-good-comments', (req, res) => {
+    const { user } = req.body;
+//add code
+});
+
+//favorites #1 on new requirements
+app.post('/getFavorites', (req, res) => {
+    const { userX, userY } = req.body;
+//add code
+});
+
 //start server
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
