@@ -369,11 +369,41 @@ app.get('/poor-reviewers', (req, res) => {
     });
 });
 
-
-
 //never poor reviewers #2 on new requirements
 app.get('/never-poor-reviewers', (req, res) => {
-//add code
+    const username = req.session.username;
+
+    if (!username) {
+        return res.status(403).send('Please relog.');
+    }
+
+    // Query to get users who have never posted a 'Poor' review
+    const query = `
+        SELECT DISTINCT r.user_name
+        FROM reviews r
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM reviews r2
+            WHERE r2.user_name = r.user_name
+            AND r2.rating = 'Poor'
+        );
+    `;
+
+    db.query(query, (error, results) => {
+        if (error) {
+            console.error('Error fetching never-poor reviewers:', error);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+
+        // Output the results for debugging
+        console.log('Query results:', results);
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'No users found who have never posted a poor review.' });
+        }
+
+        res.json(results);
+    });
 });
 
 //users with bad items #3 on new requirements 
