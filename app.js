@@ -379,12 +379,14 @@ app.get('/never-poor-reviewers', (req, res) => {
 
     // Query to get users who have never posted a 'Poor' review
     const query = `
-        SELECT DISTINCT r.user_name
-        FROM reviews r
-        WHERE NOT EXISTS (
+        SELECT DISTINCT u.username
+        FROM user u
+        LEFT JOIN reviews r ON u.username = r.user_name
+        WHERE r.user_name IS NULL
+        OR NOT EXISTS (
             SELECT 1
             FROM reviews r2
-            WHERE r2.user_name = r.user_name
+            WHERE r2.user_name = u.username
             AND r2.rating = 'Poor'
         );
     `;

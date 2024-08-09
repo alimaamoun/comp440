@@ -48,4 +48,8 @@ HAVING COUNT(item_id) = (
 
 
 6)
-
+SELECT DISTINCT i.username
+FROM items i
+LEFT JOIN reviews r ON i.item_id = r.item_id
+GROUP BY i.username
+HAVING SUM(CASE WHEN r.rating = 'poor' THEN 1 ELSE 0 END) = 0;
