@@ -335,19 +335,24 @@ app.get('/poor-reviewers', (req, res) => {
         return res.status(403).send('Please relog.');
     }
 
+    // Query to get users who only have 'poor' reviews
     const query = `
-        SELECT DISTINCT i.username
-        FROM items i
-        WHERE i.username = ?  
-        AND NOT EXISTS (
+        SELECT DISTINCT r.user_name
+        FROM reviews r
+        WHERE NOT EXISTS (
             SELECT 1
-            FROM reviews r
-            WHERE r.item_id = i.item_id
-            AND r.rating IN ('Excellent', 'Good')
+            FROM reviews r2
+            WHERE r2.user_name = r.user_name
+            AND r2.rating <> 'Poor'
+        )
+        AND EXISTS (
+            SELECT 1
+            FROM reviews r3
+            WHERE r3.user_name = r.user_name
         );
     `;
 
-    db.query(query, [username], (error, results) => {
+    db.query(query, (error, results) => {
         if (error) {
             console.error('Error fetching poor reviewers:', error);
             return res.status(500).json({ error: 'Internal Server Error' });
@@ -363,6 +368,7 @@ app.get('/poor-reviewers', (req, res) => {
         res.json(results);
     });
 });
+
 
 
 //never poor reviewers #2 on new requirements

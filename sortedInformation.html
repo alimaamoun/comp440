@@ -153,6 +153,7 @@
     </div>
 
     <script>
+        //#1
         document.getElementById('mostExpensiveForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
@@ -179,6 +180,7 @@
         });
     });
 
+    //#4
     document.getElementById('mostItemsForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
@@ -216,6 +218,7 @@
         });
     });
 
+    //#5
     document.getElementById('allPoorReviewsForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
@@ -235,8 +238,8 @@
             // Check if data is an array
             if (Array.isArray(data)) {
                 data.forEach(user => {
-                    // Ensure the server returns an object with 'username'
-                    resultsDiv.innerHTML += `<p>User: ${user.username}</p>`;
+                    // Adjust if the field name in the response is different
+                    resultsDiv.innerHTML += `<p>User: ${user.user_name}</p>`;
                 });
             } else {
                 resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
