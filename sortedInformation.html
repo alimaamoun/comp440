@@ -112,6 +112,7 @@
                 <form id="noPoorItemsForm">
                     <input type="submit" value="Get Users">
                 </form>
+                <div id="nopoorItemsResults"></div>
             </div>
         </div>
         <div class="column">
@@ -286,6 +287,40 @@
                 resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
             });
         });
+
+    //#6
+    document.getElementById('noPoorItemsForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+        fetch('/users-with-good-items', { // Ensure the correct endpoint is used
+            method: 'GET',
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json(); // Parse JSON if response is OK
+        })
+        .then(data => {
+            let resultsDiv = document.getElementById('nopoorItemsResults');
+            resultsDiv.innerHTML = '';
+
+            // Check if data is an array
+            if (Array.isArray(data)) {
+                data.forEach(user => {
+                    resultsDiv.innerHTML += `<p>User: ${user.username}</p>`;
+                });
+            } else {
+                resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching users-with-good-items:', error);
+            let resultsDiv = document.getElementById('nopoorItemsResults');
+            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
+        });
+    });
+
 
         
     </script>

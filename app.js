@@ -413,7 +413,39 @@ app.get('/users-with-bad-items', (req, res) => {
 
 //users with good items #6
 app.get('/users-with-good-items', (req, res) => {
-//add code
+    const query = `
+        SELECT DISTINCT i.username
+        FROM items i
+        LEFT JOIN reviews r ON i.item_id = r.item_id
+        GROUP BY i.username
+        HAVING SUM(CASE WHEN r.rating = 'poor' THEN 1 ELSE 0 END) = 0;
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Error fetching users: ' + err);
+            res.send('Error fetching users.');
+            return;
+        }
+
+        // Output results
+
+        // Output the results for debugging
+        console.log('Query 6 results:', results);
+
+        let html = '<h2>Users with No Poor Reviews:</h2>';
+        if (results.length === 0) {
+            html += '<p>No users found with items that never received a poor review.</p>';
+        } else {
+            html += '<ul>';
+            results.forEach(user => {
+                html += `<li>${user.username}</li>`;
+            });
+            html += '</ul>';
+        }
+
+        res.send(html);
+    });
 });
 
 //two categories on same day #2
