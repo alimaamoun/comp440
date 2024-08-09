@@ -58,6 +58,26 @@
         .footer {
             margin-top: 20px;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+        }
+        .centered-table {
+            display: flex;
+            justify-content: center;
+        }
+        .table-container {
+            width: 100%;
+            max-width: 600px; 
+        }
     </style>
 </head>
 <body>
@@ -99,7 +119,6 @@
                 <form id="noPoorReviewsForm">
                     <input type="submit" value="Get Users">
                 </form>
-                <div id="nopoorReviewersResults"></div>
             </div>
             <div class="form-box">
                 <h2>Users with Bad Items</h2>
@@ -112,7 +131,6 @@
                 <form id="noPoorItemsForm">
                     <input type="submit" value="Get Users">
                 </form>
-                <div id="nopoorItemsResults"></div>
             </div>
         </div>
         <div class="column">
@@ -155,104 +173,129 @@
     </div>
 
     <script>
-        //#1
         document.getElementById('mostExpensiveForm').addEventListener('submit', function(event) {
-    event.preventDefault();
+            event.preventDefault();
 
-        fetch('/getMostExpensiveItems', {
-            method: 'POST',
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json(); // Try to parse as JSON only if response is OK
-        })
-        .then(data => {
-            let resultsDiv = document.getElementById('mostExpensiveResults');
-            resultsDiv.innerHTML = '';
-            data.forEach(item => {
-                resultsDiv.innerHTML += `<p>Category: ${item.category}, Title: ${item.title}, Price: ${item.price}</p>`;
-            });
-        })
-        .catch(error => {
-            console.error('Error fetching most expensive items:', error);
-            let resultsDiv = document.getElementById('mostExpensiveResults');
-            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
-        });
-    });
+            fetch('/getMostExpensiveItems', {
+                method: 'POST',
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json(); 
+            })
+            .then(data => {
+                let resultsDiv = document.getElementById('mostExpensiveResults');
+                resultsDiv.innerHTML = '';
+                const uniqueItems = [];
+                const seenItems = new Set();
 
-    //#4
-    document.getElementById('mostItemsForm').addEventListener('submit', function(event) {
-    event.preventDefault();
+                let table = `<table>
+                    <tr>
+                        <th>Category</th>
+                        <th>Title</th>
+                        <th>Price</th>
+                    </tr>`;
 
-        fetch('/most-items-on-7-4-2024', {
-            method: 'POST', // Changed to POST
-            headers: {
-                'Content-Type': 'application/json' // Set headers if needed
-            },
-            body: JSON.stringify({}) // Empty body or add data if needed
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json(); // Parse JSON if response is OK
-        })
-        .then(data => {
-            let resultsDiv = document.getElementById('mostItemsResults');
-            resultsDiv.innerHTML = '';
-
-            // Check if data is an array
-            if (Array.isArray(data)) {
-                data.forEach(user => {
-                    // Assuming the server returns an array of objects with a 'username' field
-                    resultsDiv.innerHTML += `<p>User: ${user.username}</p>`;
+                data.forEach(item => {
+                    table += `<tr>
+                        <td>${item.category}</td>
+                        <td>${item.title}</td>
+                        <td>${item.price}</td>
+                    </tr>`;
                 });
-            } else {
-                resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching users with most items on 7/4/2024:', error);
-            let resultsDiv = document.getElementById('mostItemsResults');
-            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
+
+                table += `</table>`;
+                resultsDiv.innerHTML = table;
+            })
+            .catch(error => {
+                console.error('Error fetching most expensive items:', error);
+                let resultsDiv = document.getElementById('mostExpensiveResults');
+                resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
+            });
         });
+
+//#4
+document.getElementById('mostItemsForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    fetch('/most-items-on-7-4-2024', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => {
+        if (response.status === 404) {
+            return { message: 'No users found who posted 2 or more items on 7/4/2024' };
+        } else if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        let resultsDiv = document.getElementById('mostItemsResults');
+        resultsDiv.innerHTML = '';
+
+        // Check if data is an array or an error message
+        if (Array.isArray(data)) {
+            data.forEach(user => {
+                resultsDiv.innerHTML += `<p>User: ${user.username}</p>`;
+            });
+        } else if (data.message) {
+            resultsDiv.innerHTML = `<p>${data.message}</p>`;
+        } else {
+            resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching users with most items on 7/4/2024:', error);
+        let resultsDiv = document.getElementById('mostItemsResults');
+        resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
     });
+});
+
 
     //#5
     document.getElementById('allPoorReviewsForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
-        fetch('/poor-reviewers', {
-            method: 'GET',
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json(); // Parse JSON if response is OK
-        })
-        .then(data => {
-            let resultsDiv = document.getElementById('poorReviewersResults');
-            resultsDiv.innerHTML = '';
+    fetch('/poor-reviewers', {
+        method: 'GET',
+    })
+    .then(response => {
+        if (response.status === 403) {
+            throw new Error('Please relog.');
+        }
+        if (response.status === 404) {
+            return response.json().then(data => { throw new Error(data.message); });
+        }
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        let resultsDiv = document.getElementById('poorReviewersResults');
+        resultsDiv.innerHTML = '';
 
-            // Check if data is an array
-            if (Array.isArray(data)) {
-                data.forEach(user => {
-                    // Adjust if the field name in the response is different
-                    resultsDiv.innerHTML += `<p>User: ${user.user_name}</p>`;
-                });
-            } else {
-                resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching poor reviewers:', error);
-            let resultsDiv = document.getElementById('poorReviewersResults');
-            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
-        });
+        if (Array.isArray(data)) {
+            data.forEach(user => {
+                resultsDiv.innerHTML += `<p>User: ${user.user_name}</p>`;
+            });
+        } else {
+            resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching poor reviewers:', error);
+        let resultsDiv = document.getElementById('poorReviewersResults');
+        resultsDiv.innerHTML = `<p>${error.message}</p>`;
     });
+});
+
 
     // #2 new
     document.getElementById('noPoorReviewsForm').addEventListener('submit', function(event) {
@@ -325,8 +368,6 @@
         });
     });
 
-
-        
     </script>
     <div class="footer">
         <a href="/review">Go Back to Review Page</a>

@@ -332,10 +332,9 @@ app.get('/poor-reviewers', (req, res) => {
     const username = req.session.username;
 
     if (!username) {
-        return res.status(403).send('Please relog.');
+        return res.status(403).json({ error: 'Please relog.' }); // Respond with a JSON error message
     }
 
-    // Query to get users who only have 'poor' reviews
     const query = `
         SELECT DISTINCT r.user_name
         FROM reviews r
@@ -358,14 +357,11 @@ app.get('/poor-reviewers', (req, res) => {
             return res.status(500).json({ error: 'Internal Server Error' });
         }
 
-        // Output the results for debugging
-        console.log('Query results:', results);
-
-        if (results.length === 0) {
+        if (!results || results.length === 0) {
             return res.status(404).json({ message: 'No poor reviewers found.' });
         }
 
-        res.json(results);
+        res.status(200).json(results);
     });
 });
 
