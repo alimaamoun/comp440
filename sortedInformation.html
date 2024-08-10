@@ -136,6 +136,7 @@
             </div>
         </div>
         <div class="column">
+            <!-- #2 original requirements Two Categories on the same day by same user -->
             <div class="form-box">
                 <h2>Users with Items in Two Categories on Same Day</h2>
                 <form id="twoCategoriesForm">
@@ -145,8 +146,9 @@
                     <input type="text" id="category2" name="category2" required>
                     <input type="submit" value="Search Users">
                 </form>
+                <div id="twoCategoriesResults"></div>
             </div>
-
+            <!-- OLD requirement #3 -->
             <div class="form-box">
                 <h2>Items with Excellent or Good Comments</h2>
                 <form id="excellentGoodForm">
@@ -154,20 +156,21 @@
                     <input type="text" id="user" name="user" required>
                     <input type="submit" value="Search Items">
                 </form>
+                <div id="excellentGoodResults"></div>
             </div>
+            <!-- NEW requirement #1 -->
             <div class="form-box">
                 <h2>Favorites</h2>
                 <form id="favoritesForm" method="POST" action="/getFavorites">
                     <label for="userX">User X:</label>
-                    <select id="userX" name="userX" required>
-                    </select>
+                    <select id="userX" name="userX" required></select>
             
                     <label for="userY">User Y:</label>
-                    <select id="userY" name="userY" required>
-                    </select>
+                    <select id="userY" name="userY" required></select><br>
             
                     <input type="submit" value="Get Favorites" class="submit-button">
                 </form>
+                <div id="favoritesResults"></div>
             </div>
             
             
@@ -370,6 +373,174 @@ document.getElementById('mostItemsForm').addEventListener('submit', function(eve
             resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
         });
     });
+
+
+    document.getElementById('twoCategoriesForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+        const category1 = document.getElementById('category1').value;
+        const category2 = document.getElementById('category2').value;
+
+        fetch('/users-with-items-in-two-categories', { // Ensure the correct endpoint is used
+            method: 'POST',
+            headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ category1:category1, category2:category2 })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json(); // Parse JSON if response is OK
+        })
+        .then(data => {
+            let resultsDiv = document.getElementById('twoCategoriesResults');
+            resultsDiv.innerHTML = '';
+
+            // Check if data is an array
+            if (Array.isArray(data)) {
+                data.forEach(user => {
+                    resultsDiv.innerHTML += `<p>User: ${user.username}</p>`;
+                });
+            } else {
+                resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching users-with-two-categories-same-day:', error);
+            let resultsDiv = document.getElementById('twoCategoriesResults');
+            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
+        });
+    });
+
+
+// items with excellent or good comments form
+//should return the items posted by selected user that have at least one comment without poor or fair reviews
+document.getElementById('excellentGoodForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+        const user = document.getElementById('user').value;
+        fetch('/items-with-excellent-or-good-comments', { // Ensure the correct endpoint is used
+            method: 'POST',
+            headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user:user })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json(); // Parse JSON if response is OK
+        })
+        .then(data => {
+            let resultsDiv = document.getElementById('excellentGoodResults');
+            resultsDiv.innerHTML = '';
+
+            let table = `<table>
+                    <tr>
+                        <th>Category</th>
+                        <th>Title</th>
+                        <th>Price</th>
+                    </tr>`;
+
+                data.forEach(item => {
+                    table += `<tr>
+                        <td>${item.category}</td>
+                        <td>${item.title}</td>
+                        <td>${item.price}</td>
+                    </tr>`;
+                });
+
+                table += `</table>`;
+                resultsDiv.innerHTML = table;
+        })
+        .catch(error => {
+            console.error('Error fetching users-with-two-categories-same-day:', error);
+            let resultsDiv = document.getElementById('excellentGoodResults');
+            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
+        });
+    });
+
+    document.getElementById('favoritesForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+        const userX = document.getElementById('userX').value;
+        const userY = document.getElementById('userY').value;
+
+        fetch('/users-favorited-by-two-users', { // Ensure the correct endpoint is used
+            method: 'POST',
+            headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ userX:userX, userY:userY })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json(); // Parse JSON if response is OK
+        })
+        .then(data => {
+            let resultsDiv = document.getElementById('favoritesResults');
+            resultsDiv.innerHTML = '';
+
+            // Check if data is an array
+            console.log("data: ", data)
+            if (Array.isArray(data)) {
+                data.forEach(user => {
+                    resultsDiv.innerHTML += `<p>User: ${user.common_favorite}</p>`;
+                });
+            } else {
+                resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching user-favorited-by-two-users:', error);
+            let resultsDiv = document.getElementById('favoritesResults');
+            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
+        });
+    });
+
+
+//get usernames into the dropdown selects
+//DOMContentLoaded listens for when the page is loaded.
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to fetch usernames and populate the dropdowns when listener is triggered
+    function populateDropdowns() {
+        fetch('/getUsernames')
+            .then(response => response.json())
+            .then(data => {
+                const userXSelect = document.getElementById('userX');
+                const userYSelect = document.getElementById('userY');
+
+                // Clear existing options
+                userXSelect.innerHTML = '';
+                userYSelect.innerHTML = '';
+
+                // Populate the dropdowns with usernames
+                data.forEach(user => {
+                    const optionX = document.createElement('option');
+                    optionX.value = user.username;
+                    optionX.textContent = user.username;
+                    userXSelect.appendChild(optionX);
+
+                    const optionY = document.createElement('option');
+                    optionY.value = user.username;
+                    optionY.textContent = user.username;
+                    userYSelect.appendChild(optionY);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching usernames:', error);
+            });
+    }
+
+    // Call the function to populate dropdowns when the page loads
+    populateDropdowns();
+});
+
+
 
     </script>
     <div class="footer">

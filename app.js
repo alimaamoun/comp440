@@ -447,15 +447,84 @@ app.get('/users-with-good-items', (req, res) => {
 });
 
 //two categories on same day #2
+//TODO: returns error when query returns empty
 app.post('/users-with-items-in-two-categories', (req, res) => {
     const { category1, category2 } = req.body;
+    console.log("here",category1, category2);
 //add code
+    const query = `
+    SELECT u.username
+    FROM user u
+    JOIN items i1 ON u.username = i1.username
+    JOIN items i2 ON u.username = i2.username
+    WHERE i1.date = i2.date
+    AND i1.category = ?
+    AND i2.category = ?
+    AND i1.item_id <> i2.item_id
+    GROUP BY u.username
+    HAVING COUNT(DISTINCT i1.item_id) >= 1
+    AND COUNT(DISTINCT i2.item_id) >= 1;
+`
+    
+
+    db.query(query,[category1,category2] ,(err, results) => {
+        if (err) {
+            console.error('Error fetching users: ' + err);
+            res.send('Error fetching users.');
+            return;
+        }
+
+        // Output results
+
+        // Output the results for debugging
+        console.log('Query 2 results:', results);
+        
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'No user found' });
+        }
+
+        res.json(results);
+    });
+
 });
 
 //items with excellent or good reviews #3
+//TODO: returns error when query is empty
 app.post('/items-with-excellent-or-good-comments', (req, res) => {
     const { user } = req.body;
+    console.log(user)
 //add code
+
+    const query = `
+    SELECT i.item_id, i.title, i.description, i.category, i.price, i.date
+    FROM items i
+    JOIN reviews r ON i.item_id = r.item_id
+    WHERE i.username = ?
+    GROUP BY i.item_id, i.title, i.description, i.category, i.price, i.date
+    HAVING COUNT(r.review_id) > 0 -- Ensures the item has at least one review
+    AND COUNT(CASE WHEN r.rating IN ('Fair', 'Poor') THEN 1 END) = 0;
+
+    `
+
+
+    db.query(query,[user] ,(err, results) => {
+        if (err) {
+            console.error('Error fetching users: ' + err);
+            res.send('Error fetching users.');
+            return;
+        }
+
+        // Output results
+
+        // Output the results for debugging
+        console.log('Query 2 results:', results);
+        
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'No user found' });
+        }
+
+        res.json(results);
+    });
 });
 
 //favorites #1 on new requirements
@@ -463,6 +532,62 @@ app.post('/getFavorites', (req, res) => {
     const { userX, userY } = req.body;
 //add code
 });
+
+//get all usernames
+app.get('/getUsernames', (req, res) => {
+    const query = 'SELECT username FROM user';
+
+    db.query(query, (error, results) => {
+        if (error) {
+            console.error('Error fetching usernames:', error);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+        res.json(results);
+    });
+});
+
+//people favorited by two users #1 NEW
+//TODO: returns error when query is empty
+app.post('/users-favorited-by-two-users', (req, res) => {
+    const { userX,userY } = req.body;
+    console.log(userX,userY)
+    //cannot select same username
+    if (userX == userY) {
+        console.error('Cannot select same user');
+        res.send('Cannot select the same user');
+        return;
+    }
+
+//add code
+
+    const query = `
+        SELECT f1.user AS common_favorite
+        FROM favorites f1
+        JOIN favorites f2 ON f1.user = f2.user
+        WHERE f1.favoritedBy = ? AND f2.favoritedBy = ?;
+    `
+
+    db.query(query,[userX,userY] ,(err, results) => {
+        if (err) {
+            console.error('Error fetching users: ' + err);
+            res.send('Error fetching users.');
+            return;
+        }
+
+        // Output results
+
+        // Output the results for debugging
+        console.log('Query 2 results:', results);
+        
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'No user found' });
+        }
+
+        res.json(results);
+    });
+});
+
+
 
 //start server
 app.listen(port, () => {
