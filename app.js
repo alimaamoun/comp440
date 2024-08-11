@@ -404,9 +404,33 @@ app.get('/never-poor-reviewers', (req, res) => {
     });
 });
 
-//users with bad items #3 on new requirements 
+//users with bad items #3 on new requirements*****************************Adrian
 app.get('/users-with-bad-items', (req, res) => {
-//add code
+    const username = req.session.username;
+
+    if (!username) {
+        return res.status(403).json({ error: 'Please relog.' });
+    }
+
+    const query = `
+        SELECT DISTINCT i.username
+        FROM items i
+        JOIN reviews r ON i.item_id = r.item_id
+        WHERE r.rating = 'poor';
+    `;
+
+    db.query(query, (error, results) => {
+        if (error) {
+            console.error('Error fetching users with bad items:', error);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'No users found with bad items.' });
+        }
+
+        res.json(results);
+    });
 });
 
 //users with good items #6
@@ -586,6 +610,8 @@ app.post('/users-favorited-by-two-users', (req, res) => {
         res.json(results);
     });
 });
+
+
 
 
 

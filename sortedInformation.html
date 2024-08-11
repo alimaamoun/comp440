@@ -126,6 +126,7 @@
                 <form id="noExcellentItemsForm">
                     <input type="submit" value="Get Users">
                 </form>
+                <div id="noExcellentItemsResults"></div>
             </div>
             <div class="form-box">
                 <h2>Users with Good Items</h2>
@@ -172,6 +173,7 @@
                 </form>
                 <div id="favoritesResults"></div>
             </div>
+            
             
             
         </div>
@@ -539,6 +541,38 @@ document.addEventListener('DOMContentLoaded', function() {
     // Call the function to populate dropdowns when the page loads
     populateDropdowns();
 });
+
+// Adrian: Requirement #3 NEW
+document.getElementById('noExcellentItemsForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        fetch('/users-with-bad-items', {
+            method: 'GET',
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            let resultsDiv = document.getElementById('noExcellentItemsResults');
+            resultsDiv.innerHTML = '';
+
+            if (Array.isArray(data)) {
+                data.forEach(user => {
+                    resultsDiv.innerHTML += `<p>User: ${user.username}</p>`;
+                });
+            } else {
+                resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching users with bad items:', error);
+            let resultsDiv = document.getElementById('noExcellentItemsResults');
+            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
+        });
+    });
 
 
 
