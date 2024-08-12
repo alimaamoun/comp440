@@ -464,46 +464,45 @@ document.getElementById('excellentGoodForm').addEventListener('submit', function
             resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
         });
     });
-
     document.getElementById('favoritesForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
-        const userX = document.getElementById('userX').value;
-        const userY = document.getElementById('userY').value;
+    const userX = document.getElementById('userX').value;
+    const userY = document.getElementById('userY').value;
 
-        fetch('/users-favorited-by-two-users', { // Ensure the correct endpoint is used
-            method: 'POST',
-            headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ userX:userX, userY:userY })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json(); // Parse JSON if response is OK
-        })
-        .then(data => {
-            let resultsDiv = document.getElementById('favoritesResults');
-            resultsDiv.innerHTML = '';
+    fetch('/users-favorited-by-two-users', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userX: userX, userY: userY })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => { // Convert error response to JSON
+                throw new Error(data.message || `HTTP error! status: ${response.status}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        let resultsDiv = document.getElementById('favoritesResults');
+        resultsDiv.innerHTML = '';
 
-            // Check if data is an array
-            console.log("data: ", data)
-            if (Array.isArray(data)) {
-                data.forEach(user => {
-                    resultsDiv.innerHTML += `<p>User: ${user.common_favorite}</p>`;
-                });
-            } else {
-                resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching user-favorited-by-two-users:', error);
-            let resultsDiv = document.getElementById('favoritesResults');
-            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
-        });
+        if (Array.isArray(data) && data.length > 0) {
+            data.forEach(user => {
+                resultsDiv.innerHTML += `<p>User: ${user.common_favorite}</p>`;
+            });
+        } else {
+            resultsDiv.innerHTML = '<p>No Favorites Found.</p>';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        let resultsDiv = document.getElementById('favoritesResults');
+        resultsDiv.innerHTML = `<p>${error.message}</p>`;
     });
+});
 
 
 //get usernames into the dropdown selects

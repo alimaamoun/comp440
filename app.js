@@ -574,9 +574,37 @@ app.post('/items-with-excellent-or-good-comments', (req, res) => {
 });
 
 //favorites #1 on new requirements
-app.post('/getFavorites', (req, res) => {
+app.post('/users-favorited-by-two-users', (req, res) => {
     const { userX, userY } = req.body;
-//add code
+    console.log('Received users:', userX, userY);
+
+    // Check if the same username is selected
+    if (userX === userY) {
+        console.log('Cannot select the same user');
+        return res.status(400).json({ message: 'Cannot select the same user' });
+    }
+
+    const query = `
+        SELECT f1.user AS common_favorite
+        FROM favorites f1
+        JOIN favorites f2 ON f1.user = f2.user
+        WHERE f1.favoritedBy = ? AND f2.favoritedBy = ?;
+    `;
+
+    db.query(query, [userX, userY], (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err);
+            return res.status(500).json({ message: 'Internal Server Error' });
+        }
+
+        if (results.length === 0) {
+            console.log('No favorites found');
+            return res.status(404).json({ message: 'No Favorites Found' });
+        }
+
+        console.log('Common favorites found:', results);
+        res.json(results);
+    });
 });
 
 //get all usernames
@@ -593,48 +621,37 @@ app.get('/getUsernames', (req, res) => {
 });
 
 //people favorited by two users #1 NEW
-//TODO: returns error when query is empty
 app.post('/users-favorited-by-two-users', (req, res) => {
-    const { userX,userY } = req.body;
-    console.log(userX,userY)
-    //cannot select same username
-    if (userX == userY) {
-        console.error('Cannot select same user');
-        res.send('Cannot select the same user');
-        return;
-    }
+    const { userX, userY } = req.body;
+    console.log(userX, userY);
 
-//add code
+    // Check if the same username is selected
+    if (userX === userY) {
+        return res.status(400).json({ message: 'Cannot select the same user' });
+    }
 
     const query = `
         SELECT f1.user AS common_favorite
         FROM favorites f1
         JOIN favorites f2 ON f1.user = f2.user
         WHERE f1.favoritedBy = ? AND f2.favoritedBy = ?;
-    `
+    `;
 
-    db.query(query,[userX,userY] ,(err, results) => {
+    db.query(query, [userX, userY], (err, results) => {
         if (err) {
-            console.error('Error fetching users: ' + err);
-            res.send('Error fetching users.');
-            return;
+            console.error('Error fetching users:', err);
+            return res.status(500).json({ message: 'Internal Server Error' });
         }
 
-        // Output results
-
-        // Output the results for debugging
-        console.log('Query 2 results:', results);
-        
+        // If no common favorites are found
         if (results.length === 0) {
-            return res.status(404).json({ message: 'No user found' });
+            return res.status(404).json({ message: 'No Favorites Found' });
         }
 
+        // Return the list of common favorites
         res.json(results);
     });
 });
-
-
-
 
 
 //start server
