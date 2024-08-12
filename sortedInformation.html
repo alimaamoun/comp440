@@ -85,13 +85,14 @@
         <h1>Sorted Information</h1>
         <form method="post" action="/logout">
             <input type="submit" name="logout" value="Logout">
+            <p>items labeled #xb are from the new requirements</p>
         </form>
     </div>
 
     <div class="container">
         <div class="column">
             <div class="form-box">
-                <h2>Most Expensive Items by Category</h2>
+                <h2>#1 Most Expensive Items by Category</h2>
                 <form id="mostExpensiveForm">
                     <input type="submit" value="Get Most Expensive Items">
                 </form>
@@ -99,7 +100,7 @@
             </div>
 
             <div class="form-box">
-                <h2>Users with Most Items on 7/4/2024</h2>
+                <h2>#4 Users with Most Items on 7/4/2024</h2>
                 <form id="mostItemsForm">
                     <input type="submit" value="Get Users">
                 </form>
@@ -107,7 +108,7 @@
             </div>
 
             <div class="form-box">
-                <h2>Poor Reviewers</h2>
+                <h2>#5 Poor Reviewers</h2>
                 <form id="allPoorReviewsForm">
                     <input type="submit" value="Get Users">
                 </form>
@@ -115,21 +116,21 @@
             </div>
 
             <div class="form-box">
-                <h2>Never Poor Reviewers</h2>
+                <h2>#2b Never Poor Reviewers</h2>
                 <form id="noPoorReviewsForm">
                     <input type="submit" value="Get Users">
                 </form>
                 <div id="noPoorReviewersResults"></div>
             </div>
             <div class="form-box">
-                <h2>Users with Bad Items</h2>
+                <h2>#3b Never posted excellent item</h2>
                 <form id="noExcellentItemsForm">
                     <input type="submit" value="Get Users">
                 </form>
                 <div id="noExcellentItemsResults"></div>
             </div>
             <div class="form-box">
-                <h2>Users with Good Items</h2>
+                <h2>#6 Users with Good Items</h2>
                 <form id="noPoorItemsForm">
                     <input type="submit" value="Get Users">
                 </form>
@@ -139,7 +140,7 @@
         <div class="column">
             <!-- #2 original requirements Two Categories on the same day by same user -->
             <div class="form-box">
-                <h2>Users with Items in Two Categories on Same Day</h2>
+                <h2>#2 Users with Items in Two Categories on Same Day</h2>
                 <form id="twoCategoriesForm">
                     <label for="category1">Category X:</label>
                     <input type="text" id="category1" name="category1" required>
@@ -151,7 +152,7 @@
             </div>
             <!-- OLD requirement #3 -->
             <div class="form-box">
-                <h2>Items with Excellent or Good Comments</h2>
+                <h2>#3 Items with Excellent or Good Comments</h2>
                 <form id="excellentGoodForm">
                     <label for="user">User X:</label>
                     <input type="text" id="user" name="user" required>
@@ -161,7 +162,7 @@
             </div>
             <!-- NEW requirement #1 -->
             <div class="form-box">
-                <h2>Favorites</h2>
+                <h2>#1b Favorites</h2>
                 <form id="favoritesForm" method="POST" action="/getFavorites">
                     <label for="userX">User X:</label>
                     <select id="userX" name="userX" required></select>

@@ -305,11 +305,20 @@ app.post('/getMostExpensiveItems', (req, res) => {
 //most items on 7/4/2024 #4
 app.post('/most-items-on-7-4-2024', (req, res) => {
     const query = `
-        SELECT username
-        FROM items
-        WHERE date = '2024-07-04'
-        GROUP BY username
-        HAVING COUNT(item_id) >= 2;
+        WITH UserPostCounts AS (
+            SELECT username, COUNT(item_id) AS post_count
+            FROM items
+            WHERE date = '2024-07-04'
+            GROUP BY username
+        ),
+        MaxPostCount AS (
+            SELECT MAX(post_count) AS max_count
+            FROM UserPostCounts
+        )
+        SELECT u.username, u.post_count
+        FROM UserPostCounts u
+        JOIN MaxPostCount m ON u.post_count = m.max_count;
+
     `;
 
     db.query(query, (error, results) => {
@@ -413,10 +422,17 @@ app.get('/users-with-bad-items', (req, res) => {
     }
 
     const query = `
-        SELECT DISTINCT i.username
+        SELECT u.username
+        FROM user u
+        WHERE u.username NOT IN (
+        SELECT i.username
         FROM items i
         JOIN reviews r ON i.item_id = r.item_id
-        WHERE r.rating = 'poor';
+        WHERE r.rating = 'excellent'
+        GROUP BY i.item_id, i.username
+        HAVING COUNT(r.rating) >= 3
+);
+
     `;
 
     db.query(query, (error, results) => {
@@ -443,11 +459,17 @@ app.get('/users-with-good-items', (req, res) => {
     }
 
     const query = `
-        SELECT DISTINCT i.username
-        FROM items i
+        SELECT DISTINCT u.username
+        FROM user u
+        LEFT JOIN items i ON u.username = i.username
         LEFT JOIN reviews r ON i.item_id = r.item_id
-        GROUP BY i.username
-        HAVING SUM(CASE WHEN r.rating = 'poor' THEN 1 ELSE 0 END) = 0;
+        GROUP BY u.username
+        HAVING SUM(CASE WHEN r.rating = 'poor' THEN 1 ELSE 0 END) = 0
+        -- Users who have not posted any items
+        UNION
+        SELECT username
+        FROM user
+        WHERE username NOT IN (SELECT DISTINCT username FROM items);
     `;
 
     db.query(query, (err, results) => {
