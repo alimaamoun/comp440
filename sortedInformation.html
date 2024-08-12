@@ -220,7 +220,7 @@
             .catch(error => {
                 console.error('Error fetching most expensive items:', error);
                 let resultsDiv = document.getElementById('mostExpensiveResults');
-                resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
+                resultsDiv.innerHTML = '<p>Please relog.</p>';
             });
         });
 
@@ -255,13 +255,13 @@ document.getElementById('mostItemsForm').addEventListener('submit', function(eve
         } else if (data.message) {
             resultsDiv.innerHTML = `<p>${data.message}</p>`;
         } else {
-            resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
+            resultsDiv.innerHTML = '<p>Please relog.</p>';
         }
     })
     .catch(error => {
         console.error('Error fetching users with most items on 7/4/2024:', error);
         let resultsDiv = document.getElementById('mostItemsResults');
-        resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
+        resultsDiv.innerHTML = '<p>Please relog.</p>';
     });
 });
 
@@ -294,7 +294,7 @@ document.getElementById('mostItemsForm').addEventListener('submit', function(eve
                 resultsDiv.innerHTML += `<p>User: ${user.user_name}</p>`;
             });
         } else {
-            resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
+            resultsDiv.innerHTML = '<p>Please relog.</p>';
         }
     })
     .catch(error => {
@@ -309,137 +309,137 @@ document.getElementById('mostItemsForm').addEventListener('submit', function(eve
     document.getElementById('noPoorReviewsForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
-        fetch('/never-poor-reviewers') // Ensure the correct endpoint is used
+        fetch('/never-poor-reviewers') 
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                return response.json(); // Parse JSON if response is OK
+                return response.json(); 
             })
             .then(data => {
                 console.log('Data received:', data); 
                 let resultsDiv = document.getElementById('noPoorReviewersResults');
                 resultsDiv.innerHTML = '';
-
-                // Ensure data is an array and has the correct structure
                 if (Array.isArray(data)) {
                     data.forEach(user => {
-                        console.log('User object:', user); // Debug each user object
-                        if (user.username) { // Check if user_name exists
+                        console.log('User object:', user); 
+                        if (user.username) { 
                             resultsDiv.innerHTML += `<p>User: ${user.username}</p>`;
                         } else {
                             resultsDiv.innerHTML += '<p>Unexpected data format: user_name missing.</p>';
                         }
                     });
                 } else {
-                    resultsDiv.innerHTML = '<p>Data is not an array. Please try again later.</p>';
+                    resultsDiv.innerHTML = '<p>Please relog.</p>';
                 }
             })
             .catch(error => {
                 console.error('Error fetching never-poor reviewers:', error);
                 let resultsDiv = document.getElementById('noPoorReviewersResults');
-                resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
+                resultsDiv.innerHTML = '<p>Please relog.</p>';
             });
     });
-
-
 
     //#6
     document.getElementById('noPoorItemsForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
-        fetch('/users-with-good-items', { // Ensure the correct endpoint is used
+        fetch('/users-with-good-items', { 
             method: 'GET',
         })
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            return response.json(); // Parse JSON if response is OK
+            return response.json(); 
         })
         .then(data => {
             let resultsDiv = document.getElementById('noPoorItemsResults');
             resultsDiv.innerHTML = '';
-
-            // Check if data is an array
             if (Array.isArray(data)) {
                 data.forEach(user => {
                     resultsDiv.innerHTML += `<p>User: ${user.username}</p>`;
                 });
             } else {
-                resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
+                resultsDiv.innerHTML = '<p>Please relog.</p>';
             }
         })
         .catch(error => {
             console.error('Error fetching users-with-good-items:', error);
             let resultsDiv = document.getElementById('noPoorItemsResults');
-            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
+            resultsDiv.innerHTML = '<p>Please relog.</p>';
         });
     });
-
-
+    //two categories #2
     document.getElementById('twoCategoriesForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
-        const category1 = document.getElementById('category1').value;
-        const category2 = document.getElementById('category2').value;
+    const category1 = document.getElementById('category1').value;
+    const category2 = document.getElementById('category2').value;
+    let resultsDiv = document.getElementById('twoCategoriesResults');
+    resultsDiv.innerHTML = '';
+    //if they are the same send error message
+    if (category1 === category2) {
+        resultsDiv.innerHTML = '<p>Please use two different categories.</p>';
+        return; 
+    }
 
-        fetch('/users-with-items-in-two-categories', { // Ensure the correct endpoint is used
-            method: 'POST',
-            headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ category1:category1, category2:category2 })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json(); // Parse JSON if response is OK
-        })
-        .then(data => {
-            let resultsDiv = document.getElementById('twoCategoriesResults');
-            resultsDiv.innerHTML = '';
-
-            // Check if data is an array
-            if (Array.isArray(data)) {
-                data.forEach(user => {
-                    resultsDiv.innerHTML += `<p>User: ${user.username}</p>`;
-                });
-            } else {
-                resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching users-with-two-categories-same-day:', error);
-            let resultsDiv = document.getElementById('twoCategoriesResults');
-            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
-        });
+    fetch('/users-with-items-in-two-categories', { 
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ category1: category1, category2: category2 })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => { 
+                throw new Error(data.message || `HTTP error! status: ${response.status}`);
+            });
+        }
+        return response.json(); 
+    })
+    .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+            data.forEach(user => {
+                resultsDiv.innerHTML += `<p>User: ${user.username}</p>`;
+            });
+        } else {
+            resultsDiv.innerHTML = '<p>No Users Found.</p>';
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching users-with-two-categories-same-day:', error);
+        resultsDiv.innerHTML = `<p>${error.message}</p>`;
     });
-
+});
 
 // items with excellent or good comments form
 //should return the items posted by selected user that have at least one comment without poor or fair reviews
 document.getElementById('excellentGoodForm').addEventListener('submit', function(event) {
     event.preventDefault();
-        const user = document.getElementById('user').value;
-        fetch('/items-with-excellent-or-good-comments', { // Ensure the correct endpoint is used
-            method: 'POST',
-            headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ user:user })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json(); // Parse JSON if response is OK
-        })
-        .then(data => {
-            let resultsDiv = document.getElementById('excellentGoodResults');
-            resultsDiv.innerHTML = '';
+    const user = document.getElementById('user').value;
+    
+    fetch('/items-with-excellent-or-good-comments', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ user: user })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => { 
+                throw new Error(data.message || `HTTP error! status: ${response.status}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        let resultsDiv = document.getElementById('excellentGoodResults');
+        resultsDiv.innerHTML = '';
 
+        if (Array.isArray(data) && data.length > 0) {
             let table = `<table>
                     <tr>
                         <th>Category</th>
@@ -447,23 +447,28 @@ document.getElementById('excellentGoodForm').addEventListener('submit', function
                         <th>Price</th>
                     </tr>`;
 
-                data.forEach(item => {
-                    table += `<tr>
-                        <td>${item.category}</td>
-                        <td>${item.title}</td>
-                        <td>${item.price}</td>
-                    </tr>`;
-                });
+            data.forEach(item => {
+                table += `<tr>
+                    <td>${item.category}</td>
+                    <td>${item.title}</td>
+                    <td>${item.price}</td>
+                </tr>`;
+            });
 
-                table += `</table>`;
-                resultsDiv.innerHTML = table;
-        })
-        .catch(error => {
-            console.error('Error fetching users-with-two-categories-same-day:', error);
-            let resultsDiv = document.getElementById('excellentGoodResults');
-            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
-        });
+            table += `</table>`;
+            resultsDiv.innerHTML = table;
+        } else {
+            resultsDiv.innerHTML = '<p>No Items from this User</p>';
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching items:', error);
+        let resultsDiv = document.getElementById('excellentGoodResults');
+        resultsDiv.innerHTML = `<p>${error.message}</p>`;
     });
+});
+
+    //favorites #3 new
     document.getElementById('favoritesForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
@@ -479,7 +484,7 @@ document.getElementById('excellentGoodForm').addEventListener('submit', function
     })
     .then(response => {
         if (!response.ok) {
-            return response.json().then(data => { // Convert error response to JSON
+            return response.json().then(data => { 
                 throw new Error(data.message || `HTTP error! status: ${response.status}`);
             });
         }
@@ -508,19 +513,14 @@ document.getElementById('excellentGoodForm').addEventListener('submit', function
 //get usernames into the dropdown selects
 //DOMContentLoaded listens for when the page is loaded.
 document.addEventListener('DOMContentLoaded', function() {
-    // Function to fetch usernames and populate the dropdowns when listener is triggered
     function populateDropdowns() {
         fetch('/getUsernames')
             .then(response => response.json())
             .then(data => {
                 const userXSelect = document.getElementById('userX');
                 const userYSelect = document.getElementById('userY');
-
-                // Clear existing options
                 userXSelect.innerHTML = '';
                 userYSelect.innerHTML = '';
-
-                // Populate the dropdowns with usernames
                 data.forEach(user => {
                     const optionX = document.createElement('option');
                     optionX.value = user.username;
@@ -537,8 +537,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error fetching usernames:', error);
             });
     }
-
-    // Call the function to populate dropdowns when the page loads
     populateDropdowns();
 });
 
@@ -564,13 +562,13 @@ document.getElementById('noExcellentItemsForm').addEventListener('submit', funct
                     resultsDiv.innerHTML += `<p>User: ${user.username}</p>`;
                 });
             } else {
-                resultsDiv.innerHTML = '<p>No data format found. Please try again later.</p>';
+                resultsDiv.innerHTML = '<p>Please relog.</p>';
             }
         })
         .catch(error => {
             console.error('Error fetching users with bad items:', error);
             let resultsDiv = document.getElementById('noExcellentItemsResults');
-            resultsDiv.innerHTML = '<p>Failed to load data. Please try again later.</p>';
+            resultsDiv.innerHTML = '<p>Please relog.</p>';
         });
     });
 
@@ -582,4 +580,3 @@ document.getElementById('noExcellentItemsForm').addEventListener('submit', funct
     </div>
 </body>
 </html>
-

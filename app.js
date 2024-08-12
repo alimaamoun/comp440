@@ -341,7 +341,7 @@ app.get('/poor-reviewers', (req, res) => {
     const username = req.session.username;
 
     if (!username) {
-        return res.status(403).json({ error: 'Please relog.' }); // Respond with a JSON error message
+        return res.status(403).json({ error: 'Please relog.' }); 
     }
 
     const query = `
@@ -381,8 +381,6 @@ app.get('/never-poor-reviewers', (req, res) => {
     if (!username) {
         return res.status(403).send('Please relog.');
     }
-
-    // Query to get users who have never posted a 'Poor' review
     const query = `
         SELECT DISTINCT u.username
         FROM user u
@@ -401,8 +399,6 @@ app.get('/never-poor-reviewers', (req, res) => {
             console.error('Error fetching never-poor reviewers:', error);
             return res.status(500).json({ error: 'Internal Server Error' });
         }
-
-        // Output the results for debugging
         console.log('Query results:', results);
 
         if (results.length === 0) {
@@ -478,26 +474,20 @@ app.get('/users-with-good-items', (req, res) => {
             res.send('Error fetching users.');
             return;
         }
-
-        // Output results
-
-        // Output the results for debugging
         console.log('Query 6 results:', results);
         
         if (results.length === 0) {
             return res.status(404).json({ message: 'No user found' });
         }
-
         res.json(results);
     });
 });
 
 //two categories on same day #2
-//TODO: returns error when query returns empty
 app.post('/users-with-items-in-two-categories', (req, res) => {
     const { category1, category2 } = req.body;
-    console.log("here",category1, category2);
-//add code
+    console.log("here", category1, category2);
+
     const query = `
     SELECT u.username
     FROM user u
@@ -510,36 +500,29 @@ app.post('/users-with-items-in-two-categories', (req, res) => {
     GROUP BY u.username
     HAVING COUNT(DISTINCT i1.item_id) >= 1
     AND COUNT(DISTINCT i2.item_id) >= 1;
-`
-    
+    `;
 
-    db.query(query,[category1,category2] ,(err, results) => {
+    db.query(query, [category1, category2], (err, results) => {
         if (err) {
             console.error('Error fetching users: ' + err);
-            res.send('Error fetching users.');
+            res.status(500).json({ message: 'Error fetching users.' });
             return;
         }
 
-        // Output results
-
-        // Output the results for debugging
-        console.log('Query 2 results:', results);
+        console.log('Query results:', results);
         
         if (results.length === 0) {
-            return res.status(404).json({ message: 'No user found' });
+            return res.status(404).json({ message: 'No Users Found' });
         }
 
         res.json(results);
     });
-
 });
 
-//items with excellent or good reviews #3
-//TODO: returns error when query is empty
+//#3 good comments
 app.post('/items-with-excellent-or-good-comments', (req, res) => {
     const { user } = req.body;
-    console.log(user)
-//add code
+    console.log(user);
 
     const query = `
     SELECT i.item_id, i.title, i.description, i.category, i.price, i.date
@@ -549,29 +532,25 @@ app.post('/items-with-excellent-or-good-comments', (req, res) => {
     GROUP BY i.item_id, i.title, i.description, i.category, i.price, i.date
     HAVING COUNT(r.review_id) > 0 -- Ensures the item has at least one review
     AND COUNT(CASE WHEN r.rating IN ('Fair', 'Poor') THEN 1 END) = 0;
+    `;
 
-    `
-
-
-    db.query(query,[user] ,(err, results) => {
+    db.query(query, [user], (err, results) => {
         if (err) {
-            console.error('Error fetching users: ' + err);
-            res.send('Error fetching users.');
+            console.error('Error fetching items: ' + err);
+            res.status(500).json({ message: 'Error fetching items.' });
             return;
         }
 
-        // Output results
-
-        // Output the results for debugging
-        console.log('Query 2 results:', results);
+        console.log('Query results:', results);
         
         if (results.length === 0) {
-            return res.status(404).json({ message: 'No user found' });
+            return res.status(404).json({ message: 'No Items from this User' });
         }
 
         res.json(results);
     });
 });
+
 
 //favorites #1 on new requirements
 app.post('/users-favorited-by-two-users', (req, res) => {
