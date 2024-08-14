@@ -247,7 +247,6 @@ document.getElementById('mostItemsForm').addEventListener('submit', function(eve
         let resultsDiv = document.getElementById('mostItemsResults');
         resultsDiv.innerHTML = '';
 
-        // Check if data is an array or an error message
         if (Array.isArray(data)) {
             data.forEach(user => {
                 resultsDiv.innerHTML += `<p>User: ${user.username}</p>`;
@@ -580,3 +579,4 @@ document.getElementById('noExcellentItemsForm').addEventListener('submit', funct
     </div>
 </body>
 </html>
+

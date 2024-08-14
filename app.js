@@ -557,7 +557,7 @@ app.post('/users-favorited-by-two-users', (req, res) => {
     const { userX, userY } = req.body;
     console.log('Received users:', userX, userY);
 
-    // Check if the same username is selected
+    //if the same username is selected send error
     if (userX === userY) {
         console.log('Cannot select the same user');
         return res.status(400).json({ message: 'Cannot select the same user' });
@@ -604,7 +604,7 @@ app.post('/users-favorited-by-two-users', (req, res) => {
     const { userX, userY } = req.body;
     console.log(userX, userY);
 
-    // Check if the same username is selected
+    //if the same username is selected send error
     if (userX === userY) {
         return res.status(400).json({ message: 'Cannot select the same user' });
     }
@@ -622,12 +622,10 @@ app.post('/users-favorited-by-two-users', (req, res) => {
             return res.status(500).json({ message: 'Internal Server Error' });
         }
 
-        // If no common favorites are found
+        //no favorites found
         if (results.length === 0) {
             return res.status(404).json({ message: 'No Favorites Found' });
         }
-
-        // Return the list of common favorites
         res.json(results);
     });
 });
